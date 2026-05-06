@@ -38,6 +38,12 @@
       </el-button>
     </div>
 
+    <!-- Generating state -->
+    <div v-if="generating" class="generating-state">
+      <div class="generating-spinner" />
+      <span class="generating-text">正在生成纪要…</span>
+    </div>
+
     <!-- Summary list -->
     <div v-if="summaries.length" class="summary-list">
       <div
@@ -49,7 +55,7 @@
       >
         <div class="summary-card-header">
           <span class="summary-title">{{ s.title ?? '未命名纪要' }}</span>
-          <el-tag v-if="s.is_final" type="success" size="small">已定稿</el-tag>
+          <span v-if="s.is_final" :class="['status-badge', 'badge-done']">已定稿</span>
           <span class="summary-meta">{{ s.llm_model }} · {{ fmtDate(s.created_at) }}</span>
         </div>
       </div>
@@ -57,31 +63,43 @@
       <!-- Active summary editor -->
       <template v-if="activeSummary">
         <div class="summary-editor-area">
-          <div class="editor-toolbar">
-            <span class="section-title">{{ activeSummary.title ?? '纪要内容' }}</span>
-            <el-button size="small" @click="handleExport(activeSummary.id, 'md')">
-              导出 Markdown
-            </el-button>
-            <el-button size="small" @click="handleExport(activeSummary.id, 'docx')">
-              导出 Word
-            </el-button>
-            <el-button
-              size="small"
-              :type="activeSummary.is_final ? '' : 'success'"
-              @click="toggleFinal"
-            >
-              {{ activeSummary.is_final ? '取消定稿' : '标记定稿' }}
-            </el-button>
-            <el-button size="small" type="primary" :loading="savingSummary" @click="saveSummaryContent">
-              保存
-            </el-button>
+          <div class="summary-content-card">
+            <div class="editor-toolbar">
+              <span class="section-title">{{ activeSummary.title ?? '纪要内容' }}</span>
+              <div class="editor-actions">
+                <el-button size="small" type="primary" @click="handleExport(activeSummary.id, 'docx')">
+                  下载 Word
+                </el-button>
+                <el-button size="small" @click="handleExport(activeSummary.id, 'md')">
+                  下载 Markdown
+                </el-button>
+                <el-button
+                  size="small"
+                  link
+                  @click="handleGenerate"
+                >
+                  重新生成
+                </el-button>
+                <el-button
+                  size="small"
+                  :type="activeSummary.is_final ? '' : 'success'"
+                  @click="toggleFinal"
+                >
+                  {{ activeSummary.is_final ? '取消定稿' : '标记定稿' }}
+                </el-button>
+                <el-button size="small" type="primary" :loading="savingSummary" @click="saveSummaryContent">
+                  保存
+                </el-button>
+              </div>
+            </div>
+            <el-input
+              v-model="editingContent"
+              type="textarea"
+              :rows="20"
+              placeholder="纪要内容（Markdown格式）"
+              class="summary-textarea"
+            />
           </div>
-          <el-input
-            v-model="editingContent"
-            type="textarea"
-            :rows="20"
-            placeholder="纪要内容（Markdown格式）"
-          />
         </div>
       </template>
     </div>
@@ -203,80 +221,148 @@ onMounted(load)
 .summary-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--meeting-space-4);
 }
 
 .generate-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  gap: var(--meeting-space-3);
+  padding: var(--meeting-space-4);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-md);
   flex-wrap: wrap;
 }
 
+/* ── 生成中状态 ── */
+.generating-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--meeting-space-4);
+  padding: var(--meeting-space-10) 0;
+}
+
+.generating-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--meeting-color-primary-bg);
+  border-top-color: var(--meeting-color-primary);
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.generating-text {
+  font-size: var(--meeting-font-size-base);
+  color: var(--meeting-text-secondary);
+}
+
+/* ── 纪要列表 ── */
 .summary-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .summary-card {
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--meeting-space-3) var(--meeting-space-4);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color var(--meeting-transition-fast),
+              background var(--meeting-transition-fast);
 }
 
 .summary-card:hover {
-  border-color: var(--color-primary);
+  border-color: var(--meeting-border-focus);
+  background: var(--meeting-bg-base);
 }
 
 .summary-card.is-active {
-  border-color: var(--color-primary);
-  background: #f0f7f4;
+  border-color: var(--meeting-color-primary);
+  background: var(--meeting-color-primary-bg);
 }
 
 .summary-card-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--meeting-space-2);
 }
 
 .summary-title {
   flex: 1;
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
 }
 
 .summary-meta {
-  font-size: var(--font-size-label);
-  color: var(--color-text-secondary);
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-tertiary);
 }
 
+/* ── 纪要编辑区 ── */
 .summary-editor-area {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-1);
+  gap: var(--meeting-space-3);
+  margin-top: var(--meeting-space-1);
+}
+
+.summary-content-card {
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-8) var(--meeting-space-10);
+  max-width: 780px;
 }
 
 .editor-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--meeting-space-2);
   flex-wrap: wrap;
+  margin-bottom: var(--meeting-space-4);
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--meeting-space-2);
+  margin-left: auto;
 }
 
 .section-title {
-  flex: 1;
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: var(--meeting-font-size-md);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+}
+
+.summary-textarea :deep(textarea) {
+  font-family: monospace;
+  font-size: var(--meeting-font-size-base);
+  line-height: var(--meeting-line-height-loose);
+}
+
+/* ── 状态徽章 ── */
+.status-badge {
+  display: inline-block;
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-medium);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-done {
+  background: var(--meeting-color-success-bg);
+  color: var(--meeting-color-success);
+  border: 0.5px solid var(--meeting-color-success-border);
 }
 </style>
