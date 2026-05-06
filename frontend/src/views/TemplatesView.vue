@@ -1,41 +1,36 @@
 <template>
   <div class="templates-view">
     <div class="page-header">
-      <span class="page-title">纪要模板</span>
-      <el-button type="primary" @click="openCreate">新增模板</el-button>
+      <el-button type="primary" class="btn-new-template" @click="openCreate">新增模板</el-button>
     </div>
 
-    <el-table :data="templates" v-loading="loading" border style="width: 100%">
-      <el-table-column label="模板名称" prop="name" min-width="160" />
-      <el-table-column label="来源" width="90">
-        <template #default="{ row }">
-          <el-tag v-if="row.owner_id === null" size="small">系统</el-tag>
-          <el-tag v-else size="small" type="info">我的</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="类型" prop="type" width="120">
-        <template #default="{ row }">{{ typeLabel(row.type) }}</template>
-      </el-table-column>
-      <el-table-column label="描述" prop="description" min-width="200" show-overflow-tooltip />
-      <el-table-column label="状态" width="80">
-        <template #default="{ row }">
-          <el-switch
-            :model-value="row.enabled"
-            :disabled="!canEdit(row)"
-            @change="(v: boolean) => toggleEnabled(row, v)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="140" fixed="right">
-        <template #default="{ row }">
-          <template v-if="canEdit(row)">
-            <el-button size="small" @click="openEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
-          </template>
-          <span v-else class="no-action">—</span>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="template-grid" v-loading="loading">
+      <div
+        v-for="t in templates"
+        :key="t.id"
+        class="template-card"
+      >
+        <div class="template-card-name">{{ t.name }}</div>
+        <div class="template-card-desc">{{ t.description || '无描述' }}</div>
+        <div class="template-card-footer">
+          <span class="template-card-time">{{ formatDate(t.updated_at) }}</span>
+          <div class="template-card-actions">
+            <el-switch
+              :model-value="t.enabled"
+              :disabled="!canEdit(t)"
+              size="small"
+              @change="(v: boolean) => toggleEnabled(t, v)"
+            />
+            <template v-if="canEdit(t)">
+              <el-button size="small" link @click="openEdit(t)">编辑</el-button>
+              <el-button size="small" link type="danger" @click="handleDelete(t)">删除</el-button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <el-empty v-if="!loading && !templates.length" description="暂无模板，点击右上角新增" />
 
     <!-- Create / Edit drawer -->
     <el-drawer
@@ -71,7 +66,7 @@
           <el-input
             v-model="form.prompt_text"
             type="textarea"
-            :rows="18"
+            :rows="16"
             placeholder="在此输入 Prompt 内容..."
             class="prompt-editor"
           />
@@ -198,16 +193,8 @@ function canEdit(t: Template): boolean {
   return t.owner_id !== null && t.owner_id === authStore.user?.id
 }
 
-function typeLabel(type: string) {
-  const map: Record<string, string> = {
-    general: '通用',
-    presales: '售前交流',
-    project: '项目推进',
-    technical: '技术方案',
-    bidding: '招投标',
-    other: '其他',
-  }
-  return map[type] ?? type
+function formatDate(d: string) {
+  return new Date(d).toLocaleString('zh-CN', { hour12: false })
 }
 
 onMounted(load)
@@ -215,49 +202,104 @@ onMounted(load)
 
 <style scoped>
 .templates-view {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-4);
 }
 
 .page-header {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+}
+
+.btn-new-template {
+  border-radius: var(--meeting-radius-md);
+  padding: 7px 16px;
+  font-weight: var(--meeting-font-weight-medium);
+}
+
+/* ── 模板卡片网格 ── */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--meeting-space-4);
+}
+
+.template-card {
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-4) var(--meeting-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-2);
+  transition: border-color var(--meeting-transition-fast);
+}
+
+.template-card:hover {
+  border-color: var(--meeting-border-focus);
+}
+
+.template-card-name {
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+}
+
+.template-card-desc {
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-tertiary);
+  line-height: var(--meeting-line-height-base);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.template-card-footer {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-5);
+  margin-top: var(--meeting-space-2);
+  padding-top: var(--meeting-space-2);
+  border-top: 0.5px solid var(--meeting-border-light);
 }
 
-.page-title {
-  font-size: var(--font-size-page-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+.template-card-time {
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-tertiary);
 }
 
+.template-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--meeting-space-2);
+}
+
+/* ── 模板表单 ── */
 .template-form {
-  padding: var(--space-4) 0;
+  padding: var(--meeting-space-4) 0;
 }
 
 .prompt-hint {
-  font-size: var(--font-size-label);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-2);
-  line-height: var(--line-height-base);
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-secondary);
+  margin-bottom: var(--meeting-space-2);
+  line-height: var(--meeting-line-height-base);
 }
 
 .prompt-hint code {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  background: var(--meeting-bg-subtle);
+  border: 0.5px solid var(--meeting-border-light);
+  border-radius: var(--meeting-radius-sm);
   padding: 1px 4px;
-  font-family: var(--font-family-en);
-  color: var(--color-accent-brown);
+  font-family: monospace;
+  color: var(--meeting-color-accent);
 }
 
-.prompt-editor {
-  font-family: var(--font-family-en);
-  font-size: var(--font-size-label);
-}
-
-.no-action {
-  color: var(--color-text-placeholder);
-  font-size: var(--font-size-label);
+.prompt-editor :deep(textarea) {
+  font-family: monospace;
+  font-size: var(--meeting-font-size-base);
 }
 </style>
