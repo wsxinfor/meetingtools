@@ -2,7 +2,7 @@
   <div class="meeting-detail" v-loading="loading">
     <el-page-header @back="$router.push('/meetings')" :content="meeting?.title ?? '会议详情'" />
 
-    <el-tabs v-model="activeTab" style="margin-top: var(--space-5)">
+    <el-tabs v-model="activeTab" class="detail-tabs">
       <!-- Tab 1: 基础信息 -->
       <el-tab-pane label="基础信息" name="info">
         <template v-if="meeting">
@@ -37,11 +37,13 @@
             </el-descriptions-item>
 
             <el-descriptions-item label="状态">
-              <el-tag :type="statusTagType(meeting.status)">{{ statusLabel(meeting.status) }}</el-tag>
+              <span :class="['status-badge', `badge-${meeting.status}`]">
+                {{ statusLabel(meeting.status) }}
+              </span>
             </el-descriptions-item>
 
             <el-descriptions-item label="参会人" :span="2">
-              <el-tag v-for="(p, i) in meeting.participants" :key="i" style="margin-right: 6px">
+              <el-tag v-for="(p, i) in meeting.participants" :key="i" class="participant-tag">
                 {{ p }}
               </el-tag>
               <span v-if="!meeting.participants?.length">-</span>
@@ -114,7 +116,7 @@
               size="small"
               :loading="savingMap"
               @click="saveSpeakerMap"
-              style="margin-top: var(--space-3)"
+              style="margin-top: var(--meeting-space-3)"
             >保存映射</el-button>
           </div>
 
@@ -264,70 +266,119 @@ function statusLabel(s: string) {
   return map[s] ?? s
 }
 
-function statusTagType(s: string): 'info' | 'warning' | 'success' | 'danger' | '' {
-  const map: Record<string, 'info' | 'warning' | 'success' | 'danger' | ''> = {
-    draft: 'info', uploaded: '', processing: 'warning', done: 'success', failed: 'danger',
-  }
-  return map[s] ?? 'info'
-}
-
 onMounted(fetchMeeting)
 </script>
 
 <style scoped>
 .meeting-detail {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-5);
 }
+
+.detail-tabs {
+  margin-top: var(--meeting-space-2);
+}
+
 .actions {
   display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
+  gap: var(--meeting-space-2);
+  margin-top: var(--meeting-space-4);
 }
+
 .transcript-export-bar {
   display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  gap: var(--meeting-space-2);
+  margin-bottom: var(--meeting-space-3);
 }
+
 .speaker-map-panel {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-md);
+  padding: var(--meeting-space-4);
+  margin-bottom: var(--meeting-space-4);
 }
+
 .speaker-map-title {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-1);
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+  margin-bottom: var(--meeting-space-1);
 }
+
 .speaker-map-hint {
-  font-size: var(--font-size-label);
-  color: var(--color-text-placeholder);
-  margin-bottom: var(--space-3);
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-tertiary);
+  margin-bottom: var(--meeting-space-3);
 }
+
 .speaker-map-rows {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--meeting-space-2);
 }
+
 .speaker-map-row {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
+
 .speaker-label-tag {
   display: inline-block;
   min-width: 60px;
-  padding: 2px var(--space-2);
-  background: var(--color-table-header-bg);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-label);
-  color: var(--color-text-secondary);
+  padding: 2px var(--meeting-space-2);
+  background: var(--meeting-color-info-bg);
+  color: var(--meeting-color-info);
+  border-radius: var(--meeting-radius-sm);
+  font-size: var(--meeting-font-size-sm);
+  font-weight: var(--meeting-font-weight-medium);
   text-align: center;
 }
+
 .speaker-arrow {
-  color: var(--color-text-placeholder);
-  font-size: var(--font-size-label);
+  color: var(--meeting-text-tertiary);
+  font-size: var(--meeting-font-size-sm);
+}
+
+.participant-tag {
+  margin-right: 6px;
+  border-radius: var(--meeting-radius-sm);
+}
+
+/* ── 状态徽章 ── */
+.status-badge {
+  display: inline-block;
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-medium);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-draft,
+.badge-uploaded {
+  background: var(--meeting-color-info-bg);
+  color: var(--meeting-color-info);
+  border: 0.5px solid var(--meeting-color-info-border);
+}
+
+.badge-processing {
+  background: var(--meeting-color-warning-bg);
+  color: var(--meeting-color-warning);
+  border: 0.5px solid var(--meeting-color-warning-border);
+}
+
+.badge-done {
+  background: var(--meeting-color-success-bg);
+  color: var(--meeting-color-success);
+  border: 0.5px solid var(--meeting-color-success-border);
+}
+
+.badge-failed {
+  background: var(--meeting-color-danger-bg);
+  color: var(--meeting-color-danger-dark);
+  border: 0.5px solid var(--meeting-color-danger-border);
 }
 </style>

@@ -20,10 +20,10 @@
         启动识别
       </el-button>
       <el-button :loading="applyingTerms" @click="handleApplyTerms">应用术语纠错</el-button>
-      <el-tag v-if="asrTask" :type="asrStatusType(asrTask.status)" style="margin-left: 8px">
+      <span v-if="asrTask" :class="['status-badge', `badge-${asrTask.status}`]">
         {{ asrStatusLabel(asrTask.status) }}
         <span v-if="asrTask.status === 'running'"> {{ asrTask.progress }}%</span>
-      </el-tag>
+      </span>
     </div>
     <el-empty v-else description="请先上传音频文件" />
 
@@ -258,13 +258,6 @@ function asrStatusLabel(s: string) {
   return map[s] ?? s
 }
 
-function asrStatusType(s: string): 'info' | 'warning' | 'success' | 'danger' {
-  const map: Record<string, 'info' | 'warning' | 'success' | 'danger'> = {
-    pending: 'info', running: 'warning', done: 'success', failed: 'danger',
-  }
-  return map[s] ?? 'info'
-}
-
 function fmtMs(ms: number): string {
   const s = Math.floor(ms / 1000)
   const m = Math.floor(s / 60)
@@ -281,78 +274,85 @@ onMounted(load)
 .transcript-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--meeting-space-5);
 }
 
 .asr-panel {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  gap: var(--meeting-space-3);
+  padding: var(--meeting-space-4);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-md);
 }
 
 .asr-label {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-label);
+  color: var(--meeting-text-secondary);
+  font-size: var(--meeting-font-size-sm);
   white-space: nowrap;
 }
 
 .segment-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .segment-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
 }
 
 .segment-row {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
   align-items: flex-start;
-  padding: var(--space-3);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  transition: border-color 0.15s;
+  padding: var(--meeting-space-4);
+  padding-bottom: var(--meeting-space-4);
+  border-bottom: 0.5px solid var(--meeting-border-light);
+  transition: background var(--meeting-transition-fast),
+              border-color var(--meeting-transition-fast);
+}
+
+.segment-row:last-child {
+  border-bottom: none;
 }
 
 .segment-row.is-editing {
-  border-color: var(--color-primary);
+  border: 0.5px solid var(--meeting-color-primary);
+  background: var(--meeting-bg-base);
+  border-radius: var(--meeting-radius-md);
 }
 
 .segment-row.is-dirty {
-  border-color: var(--color-warning);
+  border-color: var(--meeting-color-warning-border);
 }
 
 .seg-meta {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--meeting-space-1);
   min-width: 88px;
   flex-shrink: 0;
   padding-top: 4px;
 }
 
 .seg-time {
-  font-size: var(--font-size-label);
-  color: var(--color-text-placeholder);
+  font-size: var(--meeting-font-size-xs);
+  color: var(--meeting-text-tertiary);
+  font-family: monospace;
   white-space: nowrap;
 }
 
 .seg-speaker-badge {
   display: inline-block;
-  padding: 1px var(--space-2);
-  background: var(--color-table-header-bg);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-label);
-  color: var(--color-text-secondary);
+  padding: 1px var(--meeting-space-2);
+  background: var(--meeting-color-info-bg);
+  color: var(--meeting-color-info);
+  border-radius: var(--meeting-radius-sm);
+  font-size: var(--meeting-font-size-sm);
+  font-weight: var(--meeting-font-weight-medium);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -366,19 +366,55 @@ onMounted(load)
 .corrected-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .corrected-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .section-title {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
   flex: 1;
+}
+
+/* ── ASR 状态徽章 ── */
+.status-badge {
+  display: inline-block;
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-medium);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-pending,
+.badge-uploaded {
+  background: var(--meeting-color-info-bg);
+  color: var(--meeting-color-info);
+  border: 0.5px solid var(--meeting-color-info-border);
+}
+
+.badge-running,
+.badge-processing {
+  background: var(--meeting-color-warning-bg);
+  color: var(--meeting-color-warning);
+  border: 0.5px solid var(--meeting-color-warning-border);
+}
+
+.badge-done {
+  background: var(--meeting-color-success-bg);
+  color: var(--meeting-color-success);
+  border: 0.5px solid var(--meeting-color-success-border);
+}
+
+.badge-failed {
+  background: var(--meeting-color-danger-bg);
+  color: var(--meeting-color-danger-dark);
+  border: 0.5px solid var(--meeting-color-danger-border);
 }
 </style>
