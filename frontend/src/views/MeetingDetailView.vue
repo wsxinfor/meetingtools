@@ -43,10 +43,33 @@
             </el-descriptions-item>
 
             <el-descriptions-item label="参会人" :span="2">
-              <el-tag v-for="(p, i) in meeting.participants" :key="i" class="participant-tag">
-                {{ p }}
-              </el-tag>
-              <span v-if="!meeting.participants?.length">-</span>
+              <template v-if="editing">
+                <el-tag
+                  v-for="(p, i) in editForm.participants"
+                  :key="i"
+                  closable
+                  class="participant-tag"
+                  @close="removeEditParticipant(i)"
+                >
+                  {{ p }}
+                </el-tag>
+                <el-input
+                  v-if="editInputVisible"
+                  ref="editInputRef"
+                  v-model="editInputValue"
+                  size="small"
+                  style="width: 120px"
+                  @keyup.enter="addEditParticipant"
+                  @blur="addEditParticipant"
+                />
+                <el-button v-else size="small" @click="showEditInput">+ 添加</el-button>
+              </template>
+              <template v-else>
+                <el-tag v-for="(p, i) in meeting.participants" :key="i" class="participant-tag">
+                  {{ p }}
+                </el-tag>
+                <span v-if="!meeting.participants?.length">-</span>
+              </template>
             </el-descriptions-item>
 
             <el-descriptions-item label="创建时间">
@@ -139,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getMeeting, updateMeeting, updateSpeakerMap, type MeetingDetail } from '@/api/meetings'
@@ -161,7 +184,12 @@ const editForm = ref({
   title: '',
   meeting_type: '',
   meeting_time: null as Date | null,
+  participants: [] as string[],
 })
+
+const editInputVisible = ref(false)
+const editInputValue = ref('')
+const editInputRef = ref<InstanceType<typeof import('element-plus')['ElInput']> | null>(null)
 
 const segments = ref<TranscriptSegment[]>([])
 const speakerMapDraft = ref<Record<string, string>>({})
@@ -215,8 +243,27 @@ function startEdit() {
     title: meeting.value.title,
     meeting_type: meeting.value.meeting_type ?? '',
     meeting_time: meeting.value.meeting_time ? new Date(meeting.value.meeting_time) : null,
+    participants: [...(meeting.value.participants ?? [])],
   }
   editing.value = true
+}
+
+function removeEditParticipant(idx: number) {
+  editForm.value.participants.splice(idx, 1)
+}
+
+function showEditInput() {
+  editInputVisible.value = true
+  nextTick(() => editInputRef.value?.focus())
+}
+
+function addEditParticipant() {
+  const val = editInputValue.value.trim()
+  if (val && !editForm.value.participants.includes(val)) {
+    editForm.value.participants.push(val)
+  }
+  editInputVisible.value = false
+  editInputValue.value = ''
 }
 
 function cancelEdit() {
@@ -230,6 +277,7 @@ async function saveEdit() {
       title: editForm.value.title,
       meeting_type: editForm.value.meeting_type || undefined,
       meeting_time: editForm.value.meeting_time?.toISOString() ?? null,
+      participants: editForm.value.participants,
     })
     editing.value = false
     ElMessage.success('已保存')
