@@ -1,13 +1,38 @@
 <template>
   <div class="record-page">
+    <!-- 步骤条 -->
+    <div class="step-bar">
+      <div
+        v-for="(step, idx) in steps"
+        :key="idx"
+        class="step-item"
+        :class="stepClass(idx)"
+      >
+        <span class="step-icon">{{ stepIcon(idx) }}</span>
+        <span class="step-label">{{ step.label }}</span>
+      </div>
+    </div>
+
     <div class="record-card">
 
       <!-- ── 就绪 / 申请权限 ── -->
       <template v-if="isIdlePhase">
-        <h2 class="card-title">开始录音</h2>
+        <div class="mic-stage">
+          <button
+            class="mic-btn mic-btn--idle"
+            :class="{ 'is-requesting': store.state === 'requesting' }"
+            :disabled="store.state === 'requesting'"
+            @click="store.startRecording()"
+          >
+            <span class="mic-dot" />
+          </button>
+          <p class="mic-hint">
+            {{ store.state === 'requesting' ? '正在获取麦克风权限…' : '点击开始录音' }}
+          </p>
+        </div>
 
         <div class="pre-select">
-          <div class="field-label">关联会议（可选，录音结束后也可更改）</div>
+          <div class="field-label">关联会议（可选）</div>
           <el-radio-group v-model="saveMode" class="mode-radios">
             <el-radio value="existing">已有会议</el-radio>
             <el-radio value="new">新建会议</el-radio>
@@ -25,22 +50,6 @@
           </el-select>
           <el-input v-else v-model="newTitle" placeholder="请输入会议标题" />
         </div>
-
-        <div class="mic-stage">
-          <button
-            class="mic-btn"
-            :class="{ 'is-requesting': store.state === 'requesting' }"
-            :disabled="store.state === 'requesting'"
-            @click="store.startRecording()"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40">
-              <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6.5 9a1 1 0 0 1 1 1 7.5 7.5 0 0 1-6.5 7.43V20h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-1.57A7.5 7.5 0 0 1 4.5 11a1 1 0 1 1 2 0 5.5 5.5 0 0 0 11 0 1 1 0 0 1 1-1z"/>
-            </svg>
-          </button>
-          <p class="mic-hint">
-            {{ store.state === 'requesting' ? '正在获取麦克风权限…' : '点击开始录音' }}
-          </p>
-        </div>
       </template>
 
       <!-- ── 录音中 / 已暂停 ── -->
@@ -54,12 +63,12 @@
         </div>
 
         <div class="waveform" :class="{ 'is-running': store.state === 'recording' }">
-          <span v-for="i in 7" :key="i" :class="`wave-bar bar-${i}`" />
+          <span v-for="i in 16" :key="i" :class="`wave-bar bar-${i}`" />
         </div>
 
-        <button class="stop-btn" @click="store.stopRecording()">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="36" height="36">
-            <rect x="4" y="4" width="16" height="16" rx="3"/>
+        <button class="mic-btn mic-btn--recording recording-active" @click="store.stopRecording()">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <rect x="6" y="6" width="12" height="12" rx="2"/>
           </svg>
         </button>
 
@@ -95,7 +104,7 @@
       <template v-else-if="store.state === 'stopped'">
         <div class="done-header">
           <span class="done-check">✓</span>
-          <span class="done-meta">录音完成 &nbsp;·&nbsp; {{ formattedDuration }} &nbsp;·&nbsp; {{ fileSize }}</span>
+          <span class="done-meta">录音完成 · {{ formattedDuration }} · {{ fileSize }}</span>
         </div>
 
         <audio
@@ -166,6 +175,30 @@ const meetings = ref<Meeting[]>([])
 const loadingMeetings = ref(false)
 const uploading = ref(false)
 
+const steps = [
+  { label: '录音' },
+  { label: '转录' },
+  { label: '选模板' },
+  { label: '生成报告' },
+]
+
+const currentStep = computed(() => {
+  if (isIdlePhase.value) return 0
+  if (isActivePhase.value) return 0
+  return 1
+})
+
+function stepClass(idx: number) {
+  if (idx < currentStep.value) return 'step-done'
+  if (idx === currentStep.value) return 'step-active'
+  return 'step-pending'
+}
+
+function stepIcon(idx: number) {
+  if (idx < currentStep.value) return '✓'
+  return String(idx + 1)
+}
+
 const isIdlePhase = computed(() =>
   store.state === 'idle' || store.state === 'requesting'
 )
@@ -234,52 +267,83 @@ onMounted(fetchMeetings)
 /* ── 页面容器 ── */
 .record-page {
   display: flex;
-  justify-content: center;
-  padding: var(--space-6);
+  flex-direction: column;
+  gap: var(--meeting-space-6);
   min-height: 100%;
+}
+
+/* ── 步骤条 ── */
+.step-bar {
+  display: flex;
+  gap: var(--meeting-space-2);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-light);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-3) var(--meeting-space-4);
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--meeting-space-2);
+  padding: var(--meeting-space-2) var(--meeting-space-3);
+  border-radius: var(--meeting-radius-md);
+  font-size: var(--meeting-font-size-sm);
+  flex: 1;
+  justify-content: center;
+}
+
+.step-done {
+  background: var(--meeting-color-success-bg);
+  color: var(--meeting-color-success);
+  font-weight: var(--meeting-font-weight-medium);
+}
+
+.step-active {
+  background: var(--meeting-color-primary-bg);
+  color: var(--meeting-color-primary);
+  font-weight: var(--meeting-font-weight-medium);
+}
+
+.step-pending {
+  background: var(--meeting-bg-subtle);
+  color: var(--meeting-text-tertiary);
+}
+
+.step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: var(--meeting-font-size-xs);
+  line-height: 1;
+}
+
+.step-done .step-icon {
+  background: var(--meeting-color-success);
+  color: #fff;
+}
+
+.step-active .step-icon {
+  background: var(--meeting-color-primary);
+  color: var(--meeting-text-on-primary);
 }
 
 /* ── 主卡片 ── */
 .record-card {
   width: 100%;
   max-width: 520px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-card);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-6);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-5);
-  align-self: flex-start;
-  margin-top: var(--space-6);
-}
-
-.card-title {
-  align-self: flex-start;
-  font-size: var(--font-size-section-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-/* ── 录前：会议预选 ── */
-.pre-select {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.field-label {
-  font-size: var(--font-size-label);
-  color: var(--color-text-secondary);
-}
-
-.mode-radios {
-  display: flex;
-  gap: var(--space-4);
+  gap: var(--meeting-space-5);
+  align-self: center;
 }
 
 /* ── 麦克风区 ── */
@@ -287,82 +351,109 @@ onMounted(fetchMeetings)
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-5) 0;
+  gap: var(--meeting-space-4);
+  padding: var(--meeting-space-8) 0 var(--meeting-space-4);
 }
 
+/* 录音按钮 — 待录音态 */
 .mic-btn {
-  width: 96px;
-  height: 96px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  border: none;
-  background: var(--color-primary);
-  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   outline: none;
+  border: 2px solid var(--meeting-color-danger);
+  background: transparent;
+  transition: background var(--meeting-transition-base),
+              transform var(--meeting-transition-fast);
 }
 
-.mic-btn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: scale(1.04);
+.mic-btn--idle {
+  border: 2px solid var(--meeting-color-danger);
+  background: transparent;
 }
 
-.mic-btn:active:not(:disabled) {
-  background: var(--color-primary-pressed);
-  transform: scale(0.97);
+.mic-btn--idle:hover:not(:disabled) {
+  background: var(--meeting-color-danger-bg);
+  transform: translateY(-1px);
 }
 
-.mic-btn.is-requesting {
+.mic-btn--idle:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mic-btn--idle.is-requesting {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+.mic-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--meeting-color-danger);
+}
+
+/* 录音按钮 — 录音中态 */
+.mic-btn--recording {
+  background: var(--meeting-color-danger);
+  border-color: var(--meeting-color-danger);
+  color: var(--meeting-text-on-primary);
+}
+
+.mic-btn--recording:hover {
+  background: var(--meeting-color-danger-dark);
+  transform: translateY(-1px);
+}
+
+.mic-btn--recording:active {
+  transform: translateY(0);
+}
+
 .mic-hint {
-  font-size: var(--font-size-body);
-  color: var(--color-text-secondary);
+  font-size: var(--meeting-font-size-base);
+  color: var(--meeting-text-secondary);
   margin: 0;
 }
 
 /* ── 录音中：计时器 ── */
 .timer {
-  font-size: var(--font-size-display);
+  font-size: var(--meeting-font-size-2xl);
   font-variant-numeric: tabular-nums;
   letter-spacing: 2px;
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-medium);
+  color: var(--meeting-text-primary);
+  font-weight: var(--meeting-font-weight-medium);
   line-height: 1;
 }
 
 .timer.is-paused {
-  color: var(--color-text-placeholder);
+  color: var(--meeting-text-tertiary);
 }
 
 .rec-status-label {
-  font-size: var(--font-size-label);
-  color: var(--color-text-placeholder);
+  font-size: var(--meeting-font-size-xs);
+  color: var(--meeting-text-tertiary);
   letter-spacing: 1px;
   text-transform: uppercase;
-  margin-top: calc(var(--space-2) * -1);
+  margin-top: calc(var(--meeting-space-2) * -1);
 }
 
-/* ── 波形 ── */
+/* ── 波形 — 16 bars ── */
 .waveform {
   display: flex;
   align-items: center;
-  gap: 5px;
-  height: 48px;
+  gap: 3px;
+  height: 36px;
 }
 
 .wave-bar {
   display: inline-block;
-  width: 4px;
+  width: 3px;
   border-radius: 2px;
-  background: var(--color-primary);
+  background: var(--meeting-color-primary-light);
   height: 6px;
   transform-origin: center;
   animation-play-state: paused;
@@ -375,115 +466,123 @@ onMounted(fetchMeetings)
   animation-play-state: running;
 }
 
-/* 7 根各有自己的动画，宽度和频率略有差异，形成自然感 */
-.bar-1 { animation-name: bar1; animation-duration: 0.75s; animation-delay: 0.00s; width: 3px; }
-.bar-2 { animation-name: bar2; animation-duration: 0.90s; animation-delay: 0.12s; width: 4px; }
-.bar-3 { animation-name: bar3; animation-duration: 0.65s; animation-delay: 0.05s; width: 4px; }
-.bar-4 { animation-name: bar4; animation-duration: 0.80s; animation-delay: 0.20s; width: 5px; }
-.bar-5 { animation-name: bar5; animation-duration: 0.65s; animation-delay: 0.08s; width: 4px; }
-.bar-6 { animation-name: bar6; animation-duration: 0.90s; animation-delay: 0.15s; width: 4px; }
-.bar-7 { animation-name: bar7; animation-duration: 0.75s; animation-delay: 0.03s; width: 3px; }
+/* 16 bars with staggered delays (0–0.7s) and heights 6–28px */
+.bar-1  { animation-name: wbar1;  animation-duration: 0.80s; animation-delay: 0.00s; }
+.bar-2  { animation-name: wbar2;  animation-duration: 0.75s; animation-delay: 0.05s; }
+.bar-3  { animation-name: wbar3;  animation-duration: 0.85s; animation-delay: 0.10s; }
+.bar-4  { animation-name: wbar4;  animation-duration: 0.70s; animation-delay: 0.15s; }
+.bar-5  { animation-name: wbar5;  animation-duration: 0.80s; animation-delay: 0.20s; }
+.bar-6  { animation-name: wbar6;  animation-duration: 0.75s; animation-delay: 0.25s; }
+.bar-7  { animation-name: wbar7;  animation-duration: 0.85s; animation-delay: 0.30s; }
+.bar-8  { animation-name: wbar8;  animation-duration: 0.70s; animation-delay: 0.35s; }
+.bar-9  { animation-name: wbar9;  animation-duration: 0.80s; animation-delay: 0.40s; }
+.bar-10 { animation-name: wbar10; animation-duration: 0.75s; animation-delay: 0.45s; }
+.bar-11 { animation-name: wbar11; animation-duration: 0.85s; animation-delay: 0.50s; }
+.bar-12 { animation-name: wbar12; animation-duration: 0.70s; animation-delay: 0.55s; }
+.bar-13 { animation-name: wbar13; animation-duration: 0.80s; animation-delay: 0.60s; }
+.bar-14 { animation-name: wbar14; animation-duration: 0.75s; animation-delay: 0.65s; }
+.bar-15 { animation-name: wbar15; animation-duration: 0.85s; animation-delay: 0.68s; }
+.bar-16 { animation-name: wbar16; animation-duration: 0.70s; animation-delay: 0.70s; }
 
-@keyframes bar1 { 0%,100% { height: 6px  } 50% { height: 26px } }
-@keyframes bar2 { 0%,100% { height: 10px } 50% { height: 38px } }
-@keyframes bar3 { 0%,100% { height: 6px  } 50% { height: 34px } }
-@keyframes bar4 { 0%,100% { height: 8px  } 50% { height: 44px } }
-@keyframes bar5 { 0%,100% { height: 6px  } 50% { height: 34px } }
-@keyframes bar6 { 0%,100% { height: 10px } 50% { height: 38px } }
-@keyframes bar7 { 0%,100% { height: 6px  } 50% { height: 26px } }
-
-/* ── 停止按钮 ── */
-.stop-btn {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: none;
-  background: var(--color-error);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-  animation: stop-pulse 1.6s ease-out infinite;
-  transition: background 0.2s, transform 0.15s;
-}
-
-.stop-btn:hover {
-  background: #7a3030;
-  transform: scale(1.04);
-}
-
-.stop-btn:active {
-  transform: scale(0.96);
-}
-
-@keyframes stop-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(139, 58, 58, 0.45); }
-  70%  { box-shadow: 0 0 0 8px rgba(139, 58, 58, 0);    }
-  100% { box-shadow: 0 0 0 0   rgba(139, 58, 58, 0);    }
-}
+@keyframes wbar1  { 0%,100% { height: 8px  } 50% { height: 26px } }
+@keyframes wbar2  { 0%,100% { height: 12px } 50% { height: 28px } }
+@keyframes wbar3  { 0%,100% { height: 6px  } 50% { height: 22px } }
+@keyframes wbar4  { 0%,100% { height: 10px } 50% { height: 28px } }
+@keyframes wbar5  { 0%,100% { height: 8px  } 50% { height: 18px } }
+@keyframes wbar6  { 0%,100% { height: 14px } 50% { height: 26px } }
+@keyframes wbar7  { 0%,100% { height: 6px  } 50% { height: 24px } }
+@keyframes wbar8  { 0%,100% { height: 10px } 50% { height: 28px } }
+@keyframes wbar9  { 0%,100% { height: 8px  } 50% { height: 20px } }
+@keyframes wbar10 { 0%,100% { height: 12px } 50% { height: 26px } }
+@keyframes wbar11 { 0%,100% { height: 6px  } 50% { height: 22px } }
+@keyframes wbar12 { 0%,100% { height: 10px } 50% { height: 28px } }
+@keyframes wbar13 { 0%,100% { height: 8px  } 50% { height: 18px } }
+@keyframes wbar14 { 0%,100% { height: 14px } 50% { height: 24px } }
+@keyframes wbar15 { 0%,100% { height: 6px  } 50% { height: 20px } }
+@keyframes wbar16 { 0%,100% { height: 10px } 50% { height: 26px } }
 
 /* ── 录音辅助控制 ── */
 .rec-controls {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--meeting-space-4);
 }
 
 .ctrl-btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--meeting-space-1);
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-body);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-sm);
+  padding: var(--meeting-space-2) var(--meeting-space-4);
+  font-size: var(--meeting-font-size-base);
   font-family: inherit;
-  color: var(--color-text-secondary);
+  color: var(--meeting-text-secondary);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--meeting-transition-fast),
+              color var(--meeting-transition-fast);
 }
 
 .ctrl-btn:hover {
-  background: var(--color-bg-page);
-  color: var(--color-text-primary);
+  background: var(--meeting-bg-base);
+  color: var(--meeting-text-primary);
 }
 
 .ctrl-btn.resume {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  color: var(--meeting-color-primary);
+  border-color: var(--meeting-color-primary);
 }
 
 .ctrl-btn.resume:hover {
-  background: rgba(92, 138, 120, 0.06);
+  background: var(--meeting-color-primary-bg);
 }
 
 .ctrl-btn.cancel:hover {
-  color: var(--color-error);
-  border-color: var(--color-error);
+  color: var(--meeting-color-danger);
+  border-color: var(--meeting-color-danger);
+}
+
+/* ── 录前：会议预选 ── */
+.pre-select {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-3);
+}
+
+.field-label {
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mode-radios {
+  display: flex;
+  gap: var(--meeting-space-4);
 }
 
 /* ── 录制完成 ── */
 .done-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--meeting-space-2);
   width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: rgba(74, 122, 90, 0.07);
-  border: 1px solid rgba(74, 122, 90, 0.2);
-  border-radius: var(--radius-md);
+  padding: var(--meeting-space-3) var(--meeting-space-4);
+  background: var(--meeting-color-success-bg);
+  border: 0.5px solid var(--meeting-color-success-border);
+  border-radius: var(--meeting-radius-md);
 }
 
 .done-check {
-  color: var(--color-success);
-  font-size: var(--font-size-card-title);
+  color: var(--meeting-color-success);
+  font-size: var(--meeting-font-size-lg);
 }
 
 .done-meta {
-  font-size: var(--font-size-body);
-  color: var(--color-text-secondary);
+  font-size: var(--meeting-font-size-base);
+  color: var(--meeting-text-secondary);
 }
 
 .audio-player {
@@ -497,15 +596,15 @@ onMounted(fetchMeetings)
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
+  gap: var(--meeting-space-3);
+  padding-top: var(--meeting-space-3);
+  border-top: 0.5px solid var(--meeting-border-light);
 }
 
 .save-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
   width: 100%;
 }
 </style>
