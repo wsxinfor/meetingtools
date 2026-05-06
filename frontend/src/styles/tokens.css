@@ -1,0 +1,121 @@
+/* ============================================
+   官窑瓷器设计系统 — Design Tokens
+   命名规范：--meeting-{category}-{variant}
+   ============================================ */
+
+:root {
+  /* ---------- 背景色 ---------- */
+  --meeting-bg-base: #F8F6F1;        /* 宣纸白，页面底色 */
+  --meeting-bg-surface: #FFFFFF;     /* 卡片/面板底色 */
+  --meeting-bg-sidebar: #2C3A3F;     /* 墨青，侧边栏底色 */
+  --meeting-bg-sidebar-hover: #3A5A6B; /* 侧边栏 hover */
+  --meeting-bg-sidebar-active: #3A5A6B; /* 侧边栏激活项 */
+  --meeting-bg-subtle: #F2EFE8;      /* 输入框、代码块底色 */
+
+  /* ---------- 主色 ---------- */
+  --meeting-color-primary: #3A5A6B;       /* 官青深，主操作色 */
+  --meeting-color-primary-hover: #2C4A5A; /* 主色 hover 加深 */
+  --meeting-color-primary-light: #7A9E9A; /* 汝窑青，点缀/次要 */
+  --meeting-color-primary-bg: #EAF0EE;   /* 主色浅底，选中背景 */
+
+  /* ---------- 文字色 ---------- */
+  --meeting-text-primary: #2C2C2A;   /* 墨字，主文字 */
+  --meeting-text-secondary: #5F5E5A; /* 次要文字，说明 */
+  --meeting-text-tertiary: #888780;  /* 占位符、提示 */
+  --meeting-text-sidebar: #A8B8B4;   /* 侧边栏普通导航项 */
+  --meeting-text-sidebar-active: #EAF0EE; /* 侧边栏激活项文字 */
+  --meeting-text-on-primary: #EAF0EE; /* 主色按钮上的文字 */
+
+  /* ---------- 边框色 ---------- */
+  --meeting-border-base: #C8C4B8;    /* 瓷灰，通用边框 */
+  --meeting-border-light: #DDD9D0;   /* 更浅的分割线 */
+  --meeting-border-focus: #3A5A6B;   /* 输入框聚焦边框 */
+
+  /* ---------- 语义色 ---------- */
+  /* 成功/已完成 */
+  --meeting-color-success: #2A5A42;
+  --meeting-color-success-bg: #E1EDE8;
+  --meeting-color-success-border: #7ABFA0;
+  /* 警告/进行中 */
+  --meeting-color-warning: #5A4A1A;
+  --meeting-color-warning-bg: #EDE8D8;
+  --meeting-color-warning-border: #C9A84C;
+  /* 危险/录音 */
+  --meeting-color-danger: #C25A5A;
+  --meeting-color-danger-dark: #A04040;
+  --meeting-color-danger-bg: #F0E8E8;
+  --meeting-color-danger-border: #D08080;
+  /* 信息/次要 */
+  --meeting-color-info: #3A5A6B;
+  --meeting-color-info-bg: #EAF0EE;
+  --meeting-color-info-border: #7A9E9A;
+
+  /* ---------- 赭石点缀色（用于术语库、标签等） ---------- */
+  --meeting-color-accent: #8B7355;
+  --meeting-color-accent-bg: #F2EBE0;
+
+  /* ---------- 字号 ---------- */
+  --meeting-font-size-xs: 11px;
+  --meeting-font-size-sm: 12px;
+  --meeting-font-size-base: 13px;
+  --meeting-font-size-md: 14px;
+  --meeting-font-size-lg: 16px;
+  --meeting-font-size-xl: 18px;
+  --meeting-font-size-2xl: 22px;
+
+  /* ---------- 字重（只允许这两个值）---------- */
+  --meeting-font-weight-normal: 400;
+  --meeting-font-weight-medium: 500;
+
+  /* ---------- 行高 ---------- */
+  --meeting-line-height-tight: 1.4;
+  --meeting-line-height-base: 1.6;
+  --meeting-line-height-loose: 1.8;
+
+  /* ---------- 间距（8px 基础网格）---------- */
+  --meeting-space-1: 4px;
+  --meeting-space-2: 8px;
+  --meeting-space-3: 12px;
+  --meeting-space-4: 16px;
+  --meeting-space-5: 20px;
+  --meeting-space-6: 24px;
+  --meeting-space-8: 32px;
+  --meeting-space-10: 40px;
+  --meeting-space-12: 48px;
+
+  /* ---------- 圆角（不超过 12px）---------- */
+  --meeting-radius-sm: 4px;   /* 标签、小控件 */
+  --meeting-radius-md: 6px;   /* 按钮、输入框 */
+  --meeting-radius-lg: 8px;   /* 卡片、面板 */
+  --meeting-radius-xl: 12px;  /* 模态框（最大值，不可超过）*/
+
+  /* ---------- 阴影（扩散半径不超过 8px）---------- */
+  --meeting-shadow-sm: 0 1px 4px rgba(44, 58, 63, 0.08);
+  --meeting-shadow-md: 0 2px 8px rgba(44, 58, 63, 0.10);
+
+  /* ---------- 过渡 ---------- */
+  --meeting-transition-fast: 120ms ease;
+  --meeting-transition-base: 200ms ease;
+  --meeting-transition-slow: 280ms ease; /* 不超过 300ms */
+
+  /* ---------- 布局 ---------- */
+  --meeting-sidebar-width: 200px;
+  --meeting-topbar-height: 56px;
+}
+
+/* ── 基础重置 ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-normal);
+  line-height: var(--meeting-line-height-base);
+  color: var(--meeting-text-primary);
+  background-color: var(--meeting-bg-base);
+  margin: 0;
+}

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+*.egg
+
+# Env
+.env
+.env.local
+
+# Node
+node_modules/
+frontend/dist/
+
+# DB / migrations (keep versions tracked)
+*.db
+
+# Docker
+.dockerignore
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp

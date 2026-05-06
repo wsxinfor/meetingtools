@@ -1,0 +1,90 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: meetingtools
+      POSTGRES_PASSWORD: meetingtools
+      POSTGRES_DB: meetingtools
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "6012:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meetingtools"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  funasr:
+    build:
+      context: ./deploy/funasr
+    restart: unless-stopped
+    environment:
+      ASR_MODEL: iic/SenseVoiceSmall
+      DEVICE: cpu
+      NCPU: "4"
+      MODELSCOPE_CACHE: /models
+      HF_HOME: /models
+    volumes:
+      - funasr_models:/models
+    ports:
+      - "6013:6013"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6013/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://meetingtools:meetingtools@postgres:5432/meetingtools
+      AUDIO_STORAGE_PATH: /data/audio
+      EXPORT_STORAGE_PATH: /data/exports
+      LOG_LEVEL: INFO
+      ASR_PROVIDER: http
+      ASR_HTTP_URL: http://funasr:6013
+    volumes:
+      - ./backend:/app
+      - audio_data:/data/audio
+      - export_data:/data/exports
+    ports:
+      - "6011:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "6010:5173"
+    depends_on:
+      - backend
+
+  # --- 预留服务，暂不启动 ---
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "6014:11434"
+
+  # minio:
+  #   image: minio/minio:latest
+  #   ports:
+  #     - "6015:9000"
+
+volumes:
+  postgres_data:
+  audio_data:
+  export_data:
+  funasr_models:
