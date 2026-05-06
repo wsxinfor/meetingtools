@@ -48,7 +48,29 @@
           >
             <el-option v-for="m in meetings" :key="m.id" :label="m.title" :value="m.id" />
           </el-select>
-          <el-input v-else v-model="newTitle" placeholder="请输入会议标题" />
+          <template v-else>
+            <el-input v-model="newTitle" placeholder="请输入会议标题" />
+            <div class="field-label">参会人</div>
+            <div class="participant-input">
+              <el-tag
+                v-for="(p, i) in newParticipants"
+                :key="i"
+                closable
+                @close="removeParticipant(i)"
+                class="participant-tag"
+              >{{ p }}</el-tag>
+              <el-input
+                v-if="partInputVisible"
+                ref="partInputRef"
+                v-model="partInputValue"
+                size="small"
+                style="width: 120px"
+                @keyup.enter="addParticipant"
+                @blur="addParticipant"
+              />
+              <el-button v-else size="small" @click="showPartInput">+ 添加</el-button>
+            </div>
+          </template>
         </div>
       </template>
 
@@ -132,7 +154,29 @@
           >
             <el-option v-for="m in meetings" :key="m.id" :label="m.title" :value="m.id" />
           </el-select>
-          <el-input v-else v-model="newTitle" placeholder="请输入会议标题" />
+          <template v-else>
+            <el-input v-model="newTitle" placeholder="请输入会议标题" />
+            <div class="field-label">参会人</div>
+            <div class="participant-input">
+              <el-tag
+                v-for="(p, i) in newParticipants"
+                :key="i"
+                closable
+                @close="removeParticipant(i)"
+                class="participant-tag"
+              >{{ p }}</el-tag>
+              <el-input
+                v-if="partInputVisible"
+                ref="partInputRef"
+                v-model="partInputValue"
+                size="small"
+                style="width: 120px"
+                @keyup.enter="addParticipant"
+                @blur="addParticipant"
+              />
+              <el-button v-else size="small" @click="showPartInput">+ 添加</el-button>
+            </div>
+          </template>
         </div>
 
         <div class="save-actions">
@@ -158,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useRecorderStore } from '@/stores/useRecorderStore'
@@ -174,6 +218,10 @@ const newTitle = ref('')
 const meetings = ref<Meeting[]>([])
 const loadingMeetings = ref(false)
 const uploading = ref(false)
+const newParticipants = ref<string[]>([])
+const partInputVisible = ref(false)
+const partInputValue = ref('')
+const partInputRef = ref<HTMLInputElement>()
 
 const steps = [
   { label: '录音' },
@@ -228,6 +276,24 @@ const canUpload = computed(() =>
   saveMode.value === 'existing' ? !!selectedMeetingId.value : newTitle.value.trim().length > 0
 )
 
+function removeParticipant(i: number) {
+  newParticipants.value.splice(i, 1)
+}
+
+function showPartInput() {
+  partInputVisible.value = true
+  nextTick(() => partInputRef.value?.focus())
+}
+
+function addParticipant() {
+  const v = partInputValue.value.trim()
+  if (v && !newParticipants.value.includes(v)) {
+    newParticipants.value.push(v)
+  }
+  partInputVisible.value = false
+  partInputValue.value = ''
+}
+
 async function fetchMeetings() {
   loadingMeetings.value = true
   try {
@@ -244,13 +310,17 @@ async function upload() {
   try {
     let meetingId = selectedMeetingId.value
     if (saveMode.value === 'new') {
-      const created = await createMeeting({ title: newTitle.value.trim() })
+      const created = await createMeeting({
+        title: newTitle.value.trim(),
+        participants: newParticipants.value.length ? newParticipants.value : undefined,
+      })
       meetingId = created.id
     }
     const ext = store.blob.type.includes('ogg') ? 'ogg' : 'webm'
     const file = new File([store.blob], `recording.${ext}`, { type: store.blob.type })
     await uploadAudio(meetingId, file)
     ElMessage.success('录音已上传')
+    newParticipants.value = []
     store.resetRecorder()
     router.push(`/meetings/${meetingId}`)
   } catch {
@@ -606,5 +676,18 @@ onMounted(fetchMeetings)
   flex-wrap: wrap;
   gap: var(--meeting-space-3);
   width: 100%;
+}
+
+.participant-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--meeting-space-1);
+}
+
+.participant-tag {
+  margin-right: var(--meeting-space-1);
+  margin-bottom: var(--meeting-space-1);
+  border-radius: var(--meeting-radius-sm);
 }
 </style>
