@@ -7,7 +7,7 @@
       :model="form"
       :rules="rules"
       label-width="100px"
-      style="max-width: 600px; margin-top: var(--space-5)"
+      class="create-form"
     >
       <el-form-item label="会议标题" prop="title">
         <el-input v-model="form.title" placeholder="请输入会议标题" />
@@ -62,7 +62,7 @@
           :key="i"
           closable
           @close="removeParticipant(i)"
-          style="margin-right: var(--space-2); margin-bottom: var(--space-1)"
+          class="participant-tag"
         >
           {{ p }}
         </el-tag>
@@ -165,6 +165,19 @@ onMounted(async () => {
 
 <style scoped>
 .meeting-create {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-5);
+}
+
+.create-form {
+  max-width: 600px;
+  margin-top: var(--meeting-space-2);
+}
+
+.participant-tag {
+  margin-right: var(--meeting-space-2);
+  margin-bottom: var(--meeting-space-1);
+  border-radius: var(--meeting-radius-sm);
 }
 </style>

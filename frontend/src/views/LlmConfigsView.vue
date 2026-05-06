@@ -1,11 +1,10 @@
 <template>
   <div class="llm-configs-view">
     <div class="page-header">
-      <span class="page-title">LLM 配置</span>
-      <el-button type="primary" @click="openCreate">新增配置</el-button>
+      <el-button type="primary" class="btn-new-config" @click="openCreate">新增配置</el-button>
     </div>
 
-    <el-table :data="configs" v-loading="loading" border style="width: 100%">
+    <el-table :data="configs" v-loading="loading" class="config-table">
       <el-table-column label="名称" prop="name" min-width="140" />
       <el-table-column label="类型" width="110">
         <template #default="{ row }">{{ providerLabel(row.provider) }}</template>
@@ -27,14 +26,14 @@
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button size="small" :loading="testingId === row.id" @click="handleTest(row)">
+          <el-button size="small" link :loading="testingId === row.id" @click="handleTest(row)">
             测试
           </el-button>
-          <el-button size="small" @click="handleSetDefault(row)" :disabled="row.is_default">
+          <el-button size="small" link @click="handleSetDefault(row)" :disabled="row.is_default">
             设为默认
           </el-button>
-          <el-button size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button size="small" link @click="openEdit(row)">编辑</el-button>
+          <el-button size="small" link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -228,17 +227,25 @@ onMounted(load)
 
 <style scoped>
 .llm-configs-view {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-4);
 }
+
 .page-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-5);
+  justify-content: flex-end;
 }
-.page-title {
-  font-size: var(--font-size-page-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+
+.btn-new-config {
+  border-radius: var(--meeting-radius-md);
+  padding: 7px 16px;
+  font-weight: var(--meeting-font-weight-medium);
+}
+
+.config-table {
+  border-radius: var(--meeting-radius-lg);
+  overflow: hidden;
 }
 </style>

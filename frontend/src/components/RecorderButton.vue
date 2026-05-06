@@ -65,20 +65,21 @@ function handleClick() {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: none;
-  background: var(--color-primary);
-  color: #fff;
+  border: 2px solid var(--meeting-color-danger);
+  background: transparent;
+  color: var(--meeting-color-danger);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-  transition: background 0.2s, opacity 0.2s;
+  transition: background var(--meeting-transition-base),
+              transform var(--meeting-transition-fast);
   outline: none;
 }
 
 .recorder-btn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: var(--meeting-color-danger-bg);
+  transform: translateY(-1px);
 }
 
 .recorder-btn:disabled {
@@ -87,33 +88,25 @@ function handleClick() {
 }
 
 .recorder-btn--recording {
-  background: var(--color-error) !important;
-  animation: pulse-ring 1.4s ease-out infinite;
+  background: var(--meeting-color-danger) !important;
+  border-color: var(--meeting-color-danger) !important;
+  color: var(--meeting-text-on-primary) !important;
+  animation: recording-pulse 1.2s ease-in-out infinite;
 }
 
 .recorder-btn--requesting {
-  background: var(--color-text-placeholder) !important;
-}
-
-@keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(139, 58, 58, 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(139, 58, 58, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(139, 58, 58, 0);
-  }
+  background: var(--meeting-bg-subtle) !important;
+  border-color: var(--meeting-text-tertiary) !important;
+  color: var(--meeting-text-tertiary) !important;
 }
 
 .recorder-timer {
-  font-size: var(--font-size-label);
-  color: var(--color-error);
+  font-size: var(--meeting-font-size-xs);
+  color: var(--meeting-color-danger);
   font-variant-numeric: tabular-nums;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-sm);
   padding: 1px 6px;
   line-height: 1.5;
 }

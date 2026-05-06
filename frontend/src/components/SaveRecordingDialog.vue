@@ -114,7 +114,7 @@ async function upload() {
 .dialog-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--meeting-space-4);
 }
 
 .audio-preview {
@@ -124,7 +124,7 @@ async function upload() {
 
 .mode-group {
   display: flex;
-  gap: var(--space-5);
+  gap: var(--meeting-space-5);
 }
 
 .field-row {

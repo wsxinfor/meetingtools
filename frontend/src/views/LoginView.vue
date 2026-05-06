@@ -70,40 +70,39 @@ async function submit() {
 <style scoped>
 .login-page {
   min-height: 100vh;
-  background: var(--color-bg-page);
+  background: var(--meeting-bg-base);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .login-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-6);
   width: 360px;
-  box-shadow: var(--shadow-card);
 }
 
 .login-title {
-  font-size: var(--font-size-page-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: var(--meeting-font-size-lg);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
   text-align: center;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--meeting-space-2);
 }
 
 .login-subtitle {
-  font-size: var(--font-size-body);
-  color: var(--color-text-secondary);
+  font-size: var(--meeting-font-size-base);
+  color: var(--meeting-text-secondary);
   text-align: center;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--meeting-space-5);
 }
 
 .login-hint {
-  font-size: var(--font-size-label);
-  color: var(--color-text-placeholder);
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-tertiary);
   text-align: center;
-  margin-top: var(--space-3);
+  margin-top: var(--meeting-space-3);
 }
 </style>

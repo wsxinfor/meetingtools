@@ -1,11 +1,10 @@
 <template>
   <div class="users-view">
     <div class="toolbar">
-      <span class="section-label">用户管理</span>
-      <el-button type="primary" @click="openCreate">新建用户</el-button>
+      <el-button type="primary" class="btn-new-user" @click="openCreate">新建用户</el-button>
     </div>
 
-    <el-table :data="users" v-loading="loading" border style="margin-top: var(--space-4)">
+    <el-table :data="users" v-loading="loading" class="users-table">
       <el-table-column prop="username" label="用户名" min-width="140" />
       <el-table-column label="角色" width="100">
         <template #default="{ row }">
@@ -184,16 +183,25 @@ onMounted(fetchUsers)
 
 <style scoped>
 .users-view {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-4);
 }
+
 .toolbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
 }
-.section-label {
-  font-size: var(--font-size-section-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+
+.btn-new-user {
+  border-radius: var(--meeting-radius-md);
+  padding: 7px 16px;
+  font-weight: var(--meeting-font-weight-medium);
+}
+
+.users-table {
+  border-radius: var(--meeting-radius-lg);
+  overflow: hidden;
 }
 </style>

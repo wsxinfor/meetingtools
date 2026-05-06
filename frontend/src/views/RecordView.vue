@@ -323,7 +323,7 @@ onMounted(fetchMeetings)
 
 .step-done .step-icon {
   background: var(--meeting-color-success);
-  color: #fff;
+  color: var(--meeting-bg-surface);
 }
 
 .step-active .step-icon {

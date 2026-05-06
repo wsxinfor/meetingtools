@@ -53,77 +53,74 @@ onMounted(async () => {
 
 <style scoped>
 .home {
-  padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--meeting-space-5);
   max-width: 720px;
 }
 
 .welcome-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-card);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-6);
 }
 
 .welcome-title {
-  font-size: var(--font-size-page-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--space-2);
+  font-size: var(--meeting-font-size-lg);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+  margin: 0 0 var(--meeting-space-2);
 }
 
 .welcome-desc {
-  font-size: var(--font-size-body);
-  color: var(--color-text-secondary);
-  margin: 0 0 var(--space-4);
+  font-size: var(--meeting-font-size-base);
+  color: var(--meeting-text-secondary);
+  margin: 0 0 var(--meeting-space-4);
 }
 
 .health-row {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--meeting-space-4);
 }
 
 .quick-actions {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .flow-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-card);
+  background: var(--meeting-bg-surface);
+  border: 0.5px solid var(--meeting-border-base);
+  border-radius: var(--meeting-radius-lg);
+  padding: var(--meeting-space-6);
 }
 
 .flow-title {
-  font-size: var(--font-size-section-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-4);
+  font-size: var(--meeting-font-size-md);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+  margin-bottom: var(--meeting-space-4);
 }
 
 .flow-steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .flow-step {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--meeting-space-3);
 }
 
 .step-num {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--color-primary);
-  color: #fff;
-  font-size: var(--font-size-label);
+  background: var(--meeting-color-primary);
+  color: var(--meeting-text-on-primary);
+  font-size: var(--meeting-font-size-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +128,7 @@ onMounted(async () => {
 }
 
 .step-text {
-  font-size: var(--font-size-body);
-  color: var(--color-text-primary);
+  font-size: var(--meeting-font-size-base);
+  color: var(--meeting-text-primary);
 }
 </style>

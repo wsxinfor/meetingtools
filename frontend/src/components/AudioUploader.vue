@@ -14,7 +14,7 @@
 
     <el-empty v-if="!files.length && !uploading" description="暂无音频，请上传" :image-size="60" />
 
-    <el-table v-else :data="files" size="small" style="margin-top: var(--space-3)">
+    <el-table v-else :data="files" size="small" class="audio-table">
       <el-table-column label="文件名" prop="original_filename" min-width="200" />
       <el-table-column label="大小" width="100">
         <template #default="{ row }">
@@ -94,16 +94,25 @@ onMounted(fetchFiles)
 
 <style scoped>
 .audio-uploader {
-  margin-top: var(--space-6);
+  margin-top: var(--meeting-space-6);
 }
+
 .uploader-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--meeting-space-3);
 }
+
 .section-title {
-  font-size: var(--font-size-card-title);
-  color: var(--color-text-primary);
+  font-size: var(--meeting-font-size-md);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+}
+
+.audio-table {
+  margin-top: var(--meeting-space-3);
+  border-radius: var(--meeting-radius-lg);
+  overflow: hidden;
 }
 </style>
