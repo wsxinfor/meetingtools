@@ -1,11 +1,10 @@
 <template>
   <div class="terms-view">
     <div class="page-header">
-      <span class="page-title">术语库</span>
-      <el-button type="primary" @click="openCreate">新增术语</el-button>
+      <el-button type="primary" class="btn-new-term" @click="openCreate">新增术语</el-button>
     </div>
 
-    <el-table :data="terms" v-loading="loading" border style="width: 100%">
+    <el-table :data="terms" v-loading="loading" class="terms-table">
       <el-table-column label="分类" prop="category" width="100">
         <template #default="{ row }">{{ categoryLabel(row.category) }}</template>
       </el-table-column>
@@ -13,12 +12,11 @@
       <el-table-column label="正确写法" prop="correct_text" />
       <el-table-column label="别名" min-width="120">
         <template #default="{ row }">
-          <el-tag
+          <span
             v-for="(a, i) in (row.aliases ?? [])"
             :key="i"
-            size="small"
-            style="margin-right: 4px"
-          >{{ a }}</el-tag>
+            class="term-tag"
+          >{{ a }}</span>
           <span v-if="!row.aliases?.length">-</span>
         </template>
       </el-table-column>
@@ -32,8 +30,8 @@
       </el-table-column>
       <el-table-column label="操作" width="120">
         <template #default="{ row }">
-          <el-button size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button size="small" link @click="openEdit(row)">编辑</el-button>
+          <el-button size="small" link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -62,7 +60,7 @@
               :key="i"
               closable
               @close="removeAlias(i)"
-              style="margin-right: 4px; margin-bottom: 4px"
+              class="term-tag-interactive"
             >{{ a }}</el-tag>
             <el-input
               v-model="aliasInput"
@@ -207,19 +205,50 @@ onMounted(load)
 
 <style scoped>
 .terms-view {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-4);
 }
+
 .page-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-5);
+  justify-content: flex-end;
 }
-.page-title {
-  font-size: var(--font-size-page-title);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+
+.btn-new-term {
+  border-radius: var(--meeting-radius-md);
+  padding: 7px 16px;
+  font-weight: var(--meeting-font-weight-medium);
 }
+
+.terms-table {
+  border-radius: var(--meeting-radius-lg);
+  overflow: hidden;
+}
+
+/* ── 术语标签 — 赭石色系 ── */
+.term-tag {
+  display: inline-block;
+  background: var(--meeting-color-accent-bg);
+  color: var(--meeting-color-accent);
+  border: 0.5px solid var(--meeting-color-accent);
+  border-radius: var(--meeting-radius-sm);
+  padding: 1px var(--meeting-space-2);
+  margin-right: var(--meeting-space-1);
+  font-size: var(--meeting-font-size-sm);
+  font-weight: var(--meeting-font-weight-normal);
+  line-height: var(--meeting-line-height-tight);
+}
+
+.term-tag-interactive {
+  margin-right: var(--meeting-space-1);
+  margin-bottom: var(--meeting-space-1);
+  background: var(--meeting-color-accent-bg);
+  color: var(--meeting-color-accent);
+  border-color: var(--meeting-color-accent);
+}
+
 .alias-list {
   display: flex;
   flex-wrap: wrap;
