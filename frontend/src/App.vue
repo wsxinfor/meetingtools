@@ -5,16 +5,30 @@
     </template>
 
     <div v-else class="app-layout">
-      <!-- 左侧导航栏 -->
+      <!-- 侧边栏 -->
       <aside class="app-sidebar">
         <div class="sidebar-brand" @click="handleTitleClick">
-          <span class="brand-icon">◈</span>
-          <span class="brand-text">会议记录工具</span>
+          <span class="brand-name">会议记录工具</span>
+          <span class="brand-sub">Meeting Tools</span>
         </div>
 
         <nav class="sidebar-nav">
+          <!-- 核心功能分组 -->
+          <div class="nav-group-label">核心功能</div>
           <router-link
-            v-for="item in navItems"
+            v-for="item in coreNavItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ 'is-active': isActive(item.path) }"
+          >
+            {{ item.label }}
+          </router-link>
+
+          <!-- 配置管理分组 -->
+          <div class="nav-group-label">配置管理</div>
+          <router-link
+            v-for="item in configNavItems"
             :key="item.path"
             :to="item.path"
             class="nav-item"
@@ -28,7 +42,7 @@
           <div v-if="authStore.isLoggedIn" class="user-block">
             <div class="user-meta">
               <span class="username">{{ authStore.user?.username }}</span>
-              <el-tag v-if="authStore.isAdmin" type="warning" size="small" class="role-tag">
+              <el-tag v-if="authStore.isAdmin" size="small" class="role-tag">
                 管理员
               </el-tag>
             </div>
@@ -37,12 +51,21 @@
         </div>
       </aside>
 
-      <!-- 右侧内容区 -->
-      <main class="app-content">
-        <router-view :key="viewKey" />
-      </main>
-    </div>
+      <!-- 主内容区 -->
+      <div class="app-main">
+        <!-- 顶部栏 -->
+        <header class="app-topbar">
+          <div class="topbar-title">
+            <h1 class="topbar-heading">{{ currentTitle }}</h1>
+          </div>
+        </header>
 
+        <!-- 页面内容 -->
+        <div class="app-content">
+          <router-view :key="viewKey" />
+        </div>
+      </div>
+    </div>
   </el-config-provider>
 </template>
 
@@ -57,10 +80,13 @@ const route = useRoute()
 
 const viewKey = ref(0)
 
-const navItems = computed(() => {
+const coreNavItems = computed(() => [
+  { path: '/record', label: '开始录音' },
+  { path: '/meetings', label: '会议列表' },
+])
+
+const configNavItems = computed(() => {
   const items = [
-    { path: '/record', label: '开始录音' },
-    { path: '/meetings', label: '会议列表' },
     { path: '/terms', label: '术语库' },
     { path: '/templates', label: '纪要模板' },
     { path: '/llm-configs', label: 'LLM 配置' },
@@ -69,6 +95,19 @@ const navItems = computed(() => {
     items.push({ path: '/users', label: '用户管理' })
   }
   return items
+})
+
+const currentTitle = computed(() => {
+  const map: Record<string, string> = {
+    '/record': '录音工作台',
+    '/meetings': '会议列表',
+    '/terms': '术语库',
+    '/templates': '纪要模板',
+    '/llm-configs': 'LLM 配置',
+    '/users': '用户管理',
+  }
+  const base = '/' + (route.path.split('/')[1] || '')
+  return map[base] || '会议记录工具'
 })
 
 function isActive(path: string): boolean {
@@ -96,12 +135,11 @@ function handleLogout() {
   min-height: 100vh;
 }
 
-/* ── 左侧导航栏 ── */
+/* ── 侧边栏 ── */
 .app-sidebar {
-  width: 188px;
+  width: var(--meeting-sidebar-width);
   min-height: 100vh;
-  background: var(--color-bg-card);
-  border-right: 1px solid var(--color-border);
+  background: var(--meeting-bg-sidebar);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -111,85 +149,99 @@ function handleLogout() {
   overflow: hidden;
 }
 
-/* 品牌标题区 */
+/* Logo 区 */
 .sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-5) var(--space-4);
-  background: var(--color-primary);
-  color: #fff;
+  padding: var(--meeting-space-4);
+  padding-bottom: var(--meeting-space-3);
+  border-bottom: 0.5px solid var(--meeting-color-primary);
   cursor: pointer;
-  letter-spacing: 0.5px;
   user-select: none;
 }
 
-.brand-icon {
-  font-size: 18px;
-  line-height: 1;
-  opacity: 0.85;
+.brand-name {
+  display: block;
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-sidebar-active);
+  line-height: var(--meeting-line-height-tight);
 }
 
-.brand-text {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.4;
+.brand-sub {
+  display: block;
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-normal);
+  color: var(--meeting-color-primary-light);
+  margin-top: var(--meeting-space-1);
+}
+
+/* 导航分组标签 */
+.nav-group-label {
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--meeting-space-3) var(--meeting-space-4) var(--meeting-space-1);
 }
 
 /* 导航菜单 */
 .sidebar-nav {
   flex: 1;
-  padding: var(--space-3) 0;
+  padding: var(--meeting-space-2) 0;
   overflow-y: auto;
 }
 
 .nav-item {
   display: block;
-  padding: var(--space-3) var(--space-5);
-  font-size: var(--font-size-body);
-  color: var(--color-text-secondary);
+  padding: 7px var(--meeting-space-4);
+  padding-left: var(--meeting-space-4);
+  font-size: var(--meeting-font-size-base);
+  font-weight: var(--meeting-font-weight-normal);
+  color: var(--meeting-text-sidebar);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  border-left: 2px solid transparent;
+  transition: color var(--meeting-transition-fast),
+              background var(--meeting-transition-fast);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .nav-item:hover {
-  color: var(--color-text-primary);
-  background: var(--color-bg-page);
+  color: var(--meeting-text-sidebar-active);
+  background: var(--meeting-bg-sidebar-hover);
 }
 
 .nav-item.is-active {
-  color: var(--color-primary);
-  background: rgba(92, 138, 120, 0.08);
-  border-left-color: var(--color-primary);
-  font-weight: var(--font-weight-medium);
+  color: var(--meeting-text-sidebar-active);
+  background: var(--meeting-bg-sidebar-active);
+  border-left-color: var(--meeting-color-primary-light);
+  font-weight: var(--meeting-font-weight-medium);
+  padding-left: 14px;
 }
 
 /* 底部用户区 */
 .sidebar-footer {
-  border-top: 1px solid var(--color-border);
-  padding: var(--space-4);
+  border-top: 0.5px solid var(--meeting-color-primary);
+  padding: var(--meeting-space-3) var(--meeting-space-4);
 }
 
 .user-block {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--meeting-space-2);
 }
 
 .user-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--meeting-space-1);
   min-width: 0;
 }
 
 .username {
-  font-size: var(--font-size-label);
-  color: var(--color-text-secondary);
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-sidebar);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -203,23 +255,58 @@ function handleLogout() {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: var(--font-size-label);
-  color: var(--color-text-placeholder);
+  font-size: var(--meeting-font-size-sm);
+  color: var(--meeting-text-tertiary);
   padding: 0;
   text-align: left;
   font-family: inherit;
-  transition: color 0.15s;
+  transition: color var(--meeting-transition-fast);
 }
 
 .logout-btn:hover {
-  color: var(--color-error);
+  color: var(--meeting-color-danger);
 }
 
-/* ── 右侧内容区 ── */
-.app-content {
+/* ── 主内容区 ── */
+.app-main {
   flex: 1;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--meeting-bg-base);
+}
+
+/* 顶部栏 */
+.app-topbar {
+  height: var(--meeting-topbar-height);
+  background: var(--meeting-bg-surface);
+  border-bottom: 0.5px solid var(--meeting-border-light);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--meeting-space-6);
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--meeting-space-2);
+}
+
+.topbar-heading {
+  font-size: var(--meeting-font-size-md);
+  font-weight: var(--meeting-font-weight-medium);
+  color: var(--meeting-text-primary);
+  margin: 0;
+  line-height: var(--meeting-line-height-tight);
+}
+
+/* 页面内容区 */
+.app-content {
+  flex: 1;
+  padding: var(--meeting-space-6);
+  max-width: 1200px;
+  width: 100%;
   overflow-y: auto;
-  background: var(--color-bg-page);
 }
 </style>
