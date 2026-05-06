@@ -2,6 +2,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -74,3 +75,36 @@ async def list_audio_files(
         "data": [AudioFileOut.model_validate(f).model_dump() for f in files],
         "msg": "ok",
     }
+
+
+_MEDIA_TYPES = {
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".m4a": "audio/mp4",
+    ".aac": "audio/aac",
+    ".webm": "audio/webm",
+    ".ogg": "audio/ogg",
+}
+
+
+@router.get("/audio-files/{audio_file_id}/download")
+async def download_audio_file(
+    audio_file_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    audio_file = await audio_service.get_audio_file(db, audio_file_id)
+    if not audio_file:
+        raise HTTPException(status_code=404, detail="音频文件不存在")
+    meeting = await meeting_service.get_meeting(db, audio_file.meeting_id)
+    if meeting:
+        _check_meeting_access(meeting, current_user)
+    path = Path(audio_file.file_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="音频文件不存在")
+    media_type = _MEDIA_TYPES.get(path.suffix.lower(), "application/octet-stream")
+    return FileResponse(
+        path=str(path),
+        media_type=media_type,
+        filename=audio_file.original_filename,
+    )

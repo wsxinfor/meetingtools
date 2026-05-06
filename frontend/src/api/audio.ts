@@ -29,3 +29,10 @@ export async function listAudioFiles(meetingId: string): Promise<AudioFile[]> {
   )
   return res.data.data
 }
+
+export async function downloadAudioFile(audioFileId: string): Promise<Blob> {
+  const res = await http.get(`/audio-files/${audioFileId}/download`, {
+    responseType: 'blob',
+  })
+  return res.data
+}
