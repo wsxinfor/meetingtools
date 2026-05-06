@@ -29,3 +29,16 @@ export async function exportSummary(
 export function getDownloadUrl(exportId: string): string {
   return `${http.defaults.baseURL}/export-records/${exportId}/download`
 }
+
+export async function downloadExportFile(exportId: string, filename: string): Promise<void> {
+  const res = await http.get(`/export-records/${exportId}/download`, {
+    responseType: 'blob',
+  })
+  const blob: Blob = res.data
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}

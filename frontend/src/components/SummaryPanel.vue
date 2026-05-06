@@ -113,7 +113,7 @@ import { ElMessage } from 'element-plus'
 import { listTemplates, type Template } from '@/api/templates'
 import { listLlmConfigs, type LlmConfig } from '@/api/llm_configs'
 import { generateSummary, listSummaries, updateSummary, type Summary } from '@/api/summaries'
-import { exportSummary, getDownloadUrl } from '@/api/exports'
+import { exportSummary, downloadExportFile } from '@/api/exports'
 
 const props = defineProps<{ meetingId: string }>()
 
@@ -200,11 +200,9 @@ async function toggleFinal() {
 async function handleExport(summaryId: string, format: 'md' | 'docx') {
   try {
     const record = await exportSummary(summaryId, format)
-    const url = getDownloadUrl(record.id)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = ''
-    a.click()
+    const ext = format === 'docx' ? '.docx' : '.md'
+    const filename = `${activeSummary.value?.title ?? 'summary'}${ext}`
+    await downloadExportFile(record.id, filename)
   } catch {
     ElMessage.error('导出失败')
   }

@@ -143,7 +143,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getMeeting, updateMeeting, updateSpeakerMap, type MeetingDetail } from '@/api/meetings'
-import { exportTranscript, getDownloadUrl } from '@/api/exports'
+import { exportTranscript, downloadExportFile } from '@/api/exports'
 import type { TranscriptSegment } from '@/api/segments'
 import AudioUploader from '@/components/AudioUploader.vue'
 import TranscriptEditor from '@/components/TranscriptEditor.vue'
@@ -245,11 +245,9 @@ function onCorrectedTextSaved(text: string) {
 async function exportTranscriptFile(format: 'md' | 'docx') {
   try {
     const record = await exportTranscript(meetingId, format)
-    const url = getDownloadUrl(record.id)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = ''
-    a.click()
+    const ext = format === 'docx' ? '.docx' : '.md'
+    const filename = `${meeting.value?.title ?? 'transcript'}${ext}`
+    await downloadExportFile(record.id, filename)
   } catch {
     ElMessage.error('导出失败')
   }
