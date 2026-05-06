@@ -1,30 +1,34 @@
 <template>
   <div class="meeting-list">
     <div class="toolbar">
-      <el-input
-        v-model="keyword"
-        placeholder="搜索会议标题"
-        clearable
-        style="width: 240px"
-        @change="fetchMeetings"
-      />
-      <el-select
-        v-model="statusFilter"
-        placeholder="状态筛选"
-        clearable
-        style="width: 140px"
-        @change="fetchMeetings"
-      >
-        <el-option label="草稿" value="draft" />
-        <el-option label="已上传" value="uploaded" />
-        <el-option label="处理中" value="processing" />
-        <el-option label="已完成" value="done" />
-        <el-option label="失败" value="failed" />
-      </el-select>
-      <el-button type="primary" @click="$router.push('/meetings/create')">新建会议</el-button>
+      <div class="toolbar-left">
+        <el-input
+          v-model="keyword"
+          placeholder="搜索会议标题"
+          clearable
+          style="width: 240px"
+          @change="fetchMeetings"
+        />
+        <el-select
+          v-model="statusFilter"
+          placeholder="状态筛选"
+          clearable
+          style="width: 140px"
+          @change="fetchMeetings"
+        >
+          <el-option label="草稿" value="draft" />
+          <el-option label="已上传" value="uploaded" />
+          <el-option label="处理中" value="processing" />
+          <el-option label="已完成" value="done" />
+          <el-option label="失败" value="failed" />
+        </el-select>
+      </div>
+      <el-button type="primary" class="btn-new-meeting" @click="$router.push('/meetings/create')">
+        新建会议
+      </el-button>
     </div>
 
-    <el-table :data="meetings" v-loading="loading" border style="margin-top: var(--space-4)">
+    <el-table :data="meetings" v-loading="loading" class="meeting-table">
       <el-table-column prop="title" label="会议标题" min-width="200">
         <template #default="{ row }">
           <el-link type="primary" @click="$router.push(`/meetings/${row.id}`)">
@@ -40,9 +44,11 @@
           {{ row.meeting_time ? formatDate(row.meeting_time) : '-' }}
         </template>
       </el-table-column>
-      <el-table-column label="状态" width="100">
+      <el-table-column label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+          <span :class="['status-badge', `badge-${row.status}`]">
+            {{ statusLabel(row.status) }}
+          </span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" width="180">
@@ -61,7 +67,7 @@
 
     <el-pagination
       v-if="total > 0"
-      style="margin-top: var(--space-4); justify-content: flex-end"
+      class="meeting-pagination"
       layout="total, prev, pager, next"
       :total="total"
       :page-size="pageSize"
@@ -135,23 +141,78 @@ function statusLabel(s: string) {
   return map[s] ?? s
 }
 
-function statusTagType(s: string): 'info' | 'warning' | 'success' | 'danger' | '' {
-  const map: Record<string, 'info' | 'warning' | 'success' | 'danger' | ''> = {
-    draft: 'info', uploaded: '', processing: 'warning', done: 'success', failed: 'danger',
-  }
-  return map[s] ?? 'info'
-}
-
 onMounted(fetchMeetings)
 </script>
 
 <style scoped>
 .meeting-list {
-  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--meeting-space-4);
 }
+
 .toolbar {
   display: flex;
-  gap: var(--space-3);
   align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-left {
+  display: flex;
+  gap: var(--meeting-space-3);
+  align-items: center;
+}
+
+.btn-new-meeting {
+  border-radius: var(--meeting-radius-md);
+  padding: 7px 16px;
+  font-weight: var(--meeting-font-weight-medium);
+}
+
+/* ── 状态徽章 ── */
+.status-badge {
+  display: inline-block;
+  font-size: var(--meeting-font-size-xs);
+  font-weight: var(--meeting-font-weight-medium);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  min-width: 72px;
+  text-align: center;
+}
+
+.badge-draft,
+.badge-uploaded {
+  background: var(--meeting-color-info-bg);
+  color: var(--meeting-color-info);
+  border: 0.5px solid var(--meeting-color-info-border);
+}
+
+.badge-processing {
+  background: var(--meeting-color-warning-bg);
+  color: var(--meeting-color-warning);
+  border: 0.5px solid var(--meeting-color-warning-border);
+}
+
+.badge-done {
+  background: var(--meeting-color-success-bg);
+  color: var(--meeting-color-success);
+  border: 0.5px solid var(--meeting-color-success-border);
+}
+
+.badge-failed {
+  background: var(--meeting-color-danger-bg);
+  color: var(--meeting-color-danger-dark);
+  border: 0.5px solid var(--meeting-color-danger-border);
+}
+
+/* ── 表格 ── */
+.meeting-table {
+  border-radius: var(--meeting-radius-lg);
+  overflow: hidden;
+}
+
+.meeting-pagination {
+  justify-content: flex-end;
 }
 </style>
