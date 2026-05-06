@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.meeting import Customer, Meeting, Project
 from app.schemas.meeting import (
     CustomerCreate,
+    CustomerUpdate,
     MeetingCreate,
     MeetingUpdate,
     ProjectCreate,
+    ProjectUpdate,
 )
 
 
@@ -28,6 +30,26 @@ async def list_customers(db: AsyncSession) -> list[Customer]:
     return list(result.scalars().all())
 
 
+async def get_customer(db: AsyncSession, customer_id: uuid.UUID) -> Customer | None:
+    result = await db.execute(select(Customer).where(Customer.id == customer_id))
+    return result.scalar_one_or_none()
+
+
+async def update_customer(
+    db: AsyncSession, customer: Customer, data: CustomerUpdate
+) -> Customer:
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(customer, field, value)
+    await db.commit()
+    await db.refresh(customer)
+    return customer
+
+
+async def delete_customer(db: AsyncSession, customer: Customer) -> None:
+    await db.delete(customer)
+    await db.commit()
+
+
 # --- Project ---
 
 async def create_project(db: AsyncSession, data: ProjectCreate) -> Project:
@@ -44,6 +66,26 @@ async def list_projects(db: AsyncSession, customer_id: uuid.UUID | None = None) 
         stmt = stmt.where(Project.customer_id == customer_id)
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+async def get_project(db: AsyncSession, project_id: uuid.UUID) -> Project | None:
+    result = await db.execute(select(Project).where(Project.id == project_id))
+    return result.scalar_one_or_none()
+
+
+async def update_project(
+    db: AsyncSession, project: Project, data: ProjectUpdate
+) -> Project:
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(project, field, value)
+    await db.commit()
+    await db.refresh(project)
+    return project
+
+
+async def delete_project(db: AsyncSession, project: Project) -> None:
+    await db.delete(project)
+    await db.commit()
 
 
 # --- Meeting ---

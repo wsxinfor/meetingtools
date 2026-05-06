@@ -87,6 +87,8 @@ const coreNavItems = computed(() => [
 
 const configNavItems = computed(() => {
   const items = [
+    { path: '/customers', label: '客户管理' },
+    { path: '/projects', label: '项目管理' },
     { path: '/terms', label: '术语库' },
     { path: '/templates', label: '纪要模板' },
     { path: '/llm-configs', label: 'LLM 配置' },
@@ -101,6 +103,8 @@ const currentTitle = computed(() => {
   const map: Record<string, string> = {
     '/record': '录音工作台',
     '/meetings': '会议列表',
+    '/customers': '客户管理',
+    '/projects': '项目管理',
     '/terms': '术语库',
     '/templates': '纪要模板',
     '/llm-configs': 'LLM 配置',

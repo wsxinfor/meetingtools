@@ -8,6 +8,8 @@ import TemplatesView from '@/views/TemplatesView.vue'
 import LlmConfigsView from '@/views/LlmConfigsView.vue'
 import LoginView from '@/views/LoginView.vue'
 import UsersView from '@/views/UsersView.vue'
+import CustomersView from '@/views/CustomersView.vue'
+import ProjectsView from '@/views/ProjectsView.vue'
 import RecordView from '@/views/RecordView.vue'
 
 const router = createRouter({
@@ -22,6 +24,8 @@ const router = createRouter({
     { path: '/meetings/:id', component: MeetingDetailView },
     { path: '/terms', component: TermsView },
     { path: '/templates', component: TemplatesView },
+    { path: '/customers', component: CustomersView },
+    { path: '/projects', component: ProjectsView },
     { path: '/llm-configs', component: LlmConfigsView },
     { path: '/users', component: UsersView, meta: { requireAdmin: true } },
   ],

@@ -14,6 +14,13 @@ class CustomerCreate(BaseModel):
     notes: str | None = None
 
 
+class CustomerUpdate(BaseModel):
+    name: str | None = None
+    industry: str | None = None
+    contact_info: dict[str, Any] | None = None
+    notes: str | None = None
+
+
 class CustomerOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,6 +38,14 @@ class CustomerOut(BaseModel):
 class ProjectCreate(BaseModel):
     customer_id: uuid.UUID
     name: str
+    stage: str | None = None
+    budget: str | None = None
+    notes: str | None = None
+
+
+class ProjectUpdate(BaseModel):
+    customer_id: uuid.UUID | None = None
+    name: str | None = None
     stage: str | None = None
     budget: str | None = None
     notes: str | None = None
