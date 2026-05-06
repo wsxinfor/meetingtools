@@ -1,0 +1,59 @@
+/* ============================================
+   全局微交互 — 官窑瓷器设计系统
+   ============================================ */
+
+/* 全局过渡：默认关闭，按需开启 */
+*, *::before, *::after {
+  transition-duration: 0s;
+}
+
+/* 按钮 hover */
+.btn-primary,
+.el-button--primary {
+  transition: background-color var(--meeting-transition-base),
+              transform var(--meeting-transition-fast);
+}
+.btn-primary:hover,
+.el-button--primary:hover {
+  transform: translateY(-1px);
+}
+.btn-primary:active,
+.el-button--primary:active {
+  transform: translateY(0);
+}
+
+/* 卡片/列表行 hover */
+.meeting-card,
+.el-table__row {
+  transition: background-color var(--meeting-transition-fast);
+}
+
+/* 录音按钮脉冲动画 */
+@keyframes recording-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(0.96); }
+}
+.recording-active {
+  animation: recording-pulse 1.2s ease-in-out infinite;
+}
+
+/* 页面路由切换 */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity var(--meeting-transition-slow);
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+/* 光标闪烁（流式输出用）*/
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.streaming-cursor::after {
+  content: '|';
+  color: var(--meeting-color-primary);
+  animation: cursor-blink 0.8s step-end infinite;
+}
