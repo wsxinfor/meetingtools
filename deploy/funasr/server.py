@@ -50,8 +50,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="FunASR HTTP Service", lifespan=lifespan)
 
 
+_CN_NUMS = "零一二三四五六七八九十"
+
+
 def _clean(text: str) -> str:
     return re.sub(r"<\|[^|]+\|>", "", text).strip()
+
+
+def _speaker_label(spk_id: int) -> str:
+    if 0 <= spk_id < len(_CN_NUMS):
+        return f"发言人{_CN_NUMS[spk_id]}"
+    return f"发言人{spk_id}"
 
 
 def _parse_segments(raw: list[dict]) -> list[dict]:
@@ -63,7 +72,7 @@ def _parse_segments(raw: list[dict]) -> list[dict]:
             continue
         spk_id = item.get("spk", 0)
         segments.append({
-            "speaker": f"spk{spk_id}",
+            "speaker": _speaker_label(spk_id),
             "start_ms": int(item.get("start", 0)),
             "end_ms": int(item.get("end", 0)),
             "text": text,

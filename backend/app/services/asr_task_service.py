@@ -68,19 +68,17 @@ async def _execute_asr(task_id: uuid.UUID) -> None:
         if not audio_file or not audio_file.normalized_path:
             raise RuntimeError("音频文件未完成预处理")
 
-        segments_result = await db.execute(
-            select(TranscriptSegment)
+        # Clear VAD segments so that whole-file transcription can capture
+        # speaker diarization from FunASR. VAD segments have no speaker_label
+        # and per-clip transcription loses diarization info.
+        await db.execute(
+            TranscriptSegment.__table__.delete()
             .where(TranscriptSegment.audio_file_id == task.audio_file_id)
-            .order_by(TranscriptSegment.segment_index)
         )
-        segments = list(segments_result.scalars().all())
+        await db.commit()
 
     provider = get_asr_provider()
-
-    if segments:
-        await _transcribe_segments(task_id, audio_file, segments, provider)
-    else:
-        await _transcribe_whole_file(task_id, audio_file, provider)
+    await _transcribe_whole_file(task_id, audio_file, provider)
 
 
 async def _transcribe_segments(
