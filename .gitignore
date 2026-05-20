@@ -21,6 +21,9 @@ frontend/dist/
 # Docker
 .dockerignore
 
+# Local dev certificates (private key, do not commit)
+frontend/certs/
+
 # macOS
 .DS_Store
 

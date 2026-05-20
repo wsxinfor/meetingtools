@@ -1,5 +1,6 @@
 import uuid
 
+import openai
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +33,14 @@ async def generate_summary(
         summary = await summary_service.generate_summary(db, meeting, data)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    except openai.APIConnectionError as exc:
+        raise HTTPException(status_code=502, detail=f"LLM 连接失败: {exc}") from exc
+    except openai.AuthenticationError as exc:
+        raise HTTPException(status_code=502, detail="LLM 认证失败，请检查 API Key") from exc
+    except openai.RateLimitError as exc:
+        raise HTTPException(status_code=502, detail="LLM 请求频率超限，请稍后重试") from exc
+    except openai.APITimeoutError as exc:
+        raise HTTPException(status_code=504, detail="LLM 响应超时，请稍后重试") from exc
     return {"code": 0, "data": SummaryOut.model_validate(summary).model_dump(), "msg": "ok"}
 
 

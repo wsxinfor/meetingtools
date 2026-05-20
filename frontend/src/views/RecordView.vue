@@ -50,6 +50,37 @@
           </el-select>
           <template v-else>
             <el-input v-model="newTitle" placeholder="请输入会议标题" />
+            <el-select v-model="newMeetingType" placeholder="会议类型（可选）" clearable style="width: 100%">
+              <el-option label="售前交流" value="presales" />
+              <el-option label="项目推进" value="project" />
+              <el-option label="技术方案" value="technical" />
+              <el-option label="招投标沟通" value="bidding" />
+              <el-option label="其他" value="other" />
+            </el-select>
+            <el-select
+              v-model="newCustomerId"
+              placeholder="客户（可选）"
+              clearable
+              style="width: 100%"
+              @change="onCustomerChange"
+            >
+              <el-option v-for="c in customers" :key="c.id" :label="c.name" :value="c.id" />
+            </el-select>
+            <el-select
+              v-model="newProjectId"
+              placeholder="项目（可选）"
+              clearable
+              :disabled="!newCustomerId"
+              style="width: 100%"
+            >
+              <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
+            </el-select>
+            <el-date-picker
+              v-model="newMeetingTime"
+              type="datetime"
+              placeholder="会议时间（可选）"
+              style="width: 100%"
+            />
             <div class="field-label">参会人</div>
             <div class="participant-input">
               <el-tag
@@ -156,6 +187,37 @@
           </el-select>
           <template v-else>
             <el-input v-model="newTitle" placeholder="请输入会议标题" />
+            <el-select v-model="newMeetingType" placeholder="会议类型（可选）" clearable style="width: 100%">
+              <el-option label="售前交流" value="presales" />
+              <el-option label="项目推进" value="project" />
+              <el-option label="技术方案" value="technical" />
+              <el-option label="招投标沟通" value="bidding" />
+              <el-option label="其他" value="other" />
+            </el-select>
+            <el-select
+              v-model="newCustomerId"
+              placeholder="客户（可选）"
+              clearable
+              style="width: 100%"
+              @change="onCustomerChange"
+            >
+              <el-option v-for="c in customers" :key="c.id" :label="c.name" :value="c.id" />
+            </el-select>
+            <el-select
+              v-model="newProjectId"
+              placeholder="项目（可选）"
+              clearable
+              :disabled="!newCustomerId"
+              style="width: 100%"
+            >
+              <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
+            </el-select>
+            <el-date-picker
+              v-model="newMeetingTime"
+              type="datetime"
+              placeholder="会议时间（可选）"
+              style="width: 100%"
+            />
             <div class="field-label">参会人</div>
             <div class="participant-input">
               <el-tag
@@ -208,6 +270,8 @@ import { ElMessage } from 'element-plus'
 import { useRecorderStore } from '@/stores/useRecorderStore'
 import { listMeetings, createMeeting, type Meeting } from '@/api/meetings'
 import { uploadAudio } from '@/api/audio'
+import { listCustomers, type Customer } from '@/api/customers'
+import { listProjects, type Project } from '@/api/projects'
 
 const store = useRecorderStore()
 const router = useRouter()
@@ -215,7 +279,13 @@ const router = useRouter()
 const saveMode = ref<'existing' | 'new'>('existing')
 const selectedMeetingId = ref('')
 const newTitle = ref('')
+const newMeetingType = ref('')
+const newCustomerId = ref('')
+const newProjectId = ref('')
+const newMeetingTime = ref<Date | null>(null)
 const meetings = ref<Meeting[]>([])
+const customers = ref<Customer[]>([])
+const projects = ref<Project[]>([])
 const loadingMeetings = ref(false)
 const uploading = ref(false)
 const newParticipants = ref<string[]>([])
@@ -304,6 +374,11 @@ async function fetchMeetings() {
   }
 }
 
+async function onCustomerChange(id: string) {
+  newProjectId.value = ''
+  projects.value = id ? await listProjects(id) : []
+}
+
 async function upload() {
   if (!store.blob || !canUpload.value) return
   uploading.value = true
@@ -312,6 +387,10 @@ async function upload() {
     if (saveMode.value === 'new') {
       const created = await createMeeting({
         title: newTitle.value.trim(),
+        meeting_type: newMeetingType.value || undefined,
+        customer_id: newCustomerId.value || undefined,
+        project_id: newProjectId.value || undefined,
+        meeting_time: newMeetingTime.value?.toISOString(),
         participants: newParticipants.value.length ? newParticipants.value : undefined,
       })
       meetingId = created.id
@@ -330,7 +409,10 @@ async function upload() {
   }
 }
 
-onMounted(fetchMeetings)
+onMounted(async () => {
+  fetchMeetings()
+  customers.value = await listCustomers()
+})
 </script>
 
 <style scoped>

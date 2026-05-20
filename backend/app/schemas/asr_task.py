@@ -6,7 +6,8 @@ from pydantic import BaseModel, ConfigDict
 
 class AsrTaskCreate(BaseModel):
     audio_file_id: uuid.UUID
-    engine: str = "mock"
+    engine: str = "local"
+    asr_config_id: uuid.UUID | None = None
 
 
 class AsrTaskOut(BaseModel):
@@ -15,6 +16,7 @@ class AsrTaskOut(BaseModel):
     id: uuid.UUID
     meeting_id: uuid.UUID
     audio_file_id: uuid.UUID
+    asr_config_id: uuid.UUID | None
     engine: str
     status: str
     progress: int

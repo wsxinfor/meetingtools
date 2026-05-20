@@ -18,7 +18,7 @@ export async function uploadAudio(meetingId: string, file: File): Promise<AudioF
   const res = await http.post<{ code: number; data: AudioFile }>(
     `/meetings/${meetingId}/audio`,
     form,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
+    { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 0 },
   )
   return res.data.data
 }
@@ -35,4 +35,8 @@ export async function downloadAudioFile(audioFileId: string): Promise<Blob> {
     responseType: 'blob',
   })
   return res.data
+}
+
+export async function deleteAudioFile(audioFileId: string): Promise<void> {
+  await http.delete(`/audio-files/${audioFileId}`)
 }

@@ -21,15 +21,22 @@ services:
       context: ./deploy/funasr
     restart: unless-stopped
     environment:
-      ASR_MODEL: iic/SenseVoiceSmall
+      ASR_MODEL: iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch
+      SPK_MODEL: iic/speech_campplus_sv_zh-cn_16k-common
+      VAD_MODEL: fsmn-vad
+      PUNC_MODEL: ct-punc-c
+      ITN_MODEL: fst_itn_zh
+      CLUSTER_MODEL: clustering
       DEVICE: cpu
       NCPU: "4"
+      CHUNK_MINUTES: "5"
       MODELSCOPE_CACHE: /models
       HF_HOME: /models
     volumes:
       - funasr_models:/models
     ports:
       - "6013:6013"
+    shm_size: 1g
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6013/health"]
       interval: 30s
@@ -49,6 +56,8 @@ services:
       LOG_LEVEL: INFO
       ASR_PROVIDER: http
       ASR_HTTP_URL: http://funasr:6013
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
     volumes:
       - ./backend:/app
       - audio_data:/data/audio

@@ -4,6 +4,7 @@ export interface AsrTask {
   id: string
   meeting_id: string
   audio_file_id: string
+  asr_config_id: string | null
   engine: string
   status: string
   progress: number
@@ -16,11 +17,13 @@ export interface AsrTask {
 export async function startAsrTask(
   meetingId: string,
   audioFileId: string,
-  engine = 'mock',
+  engine = 'local',
+  asrConfigId?: string,
 ): Promise<AsrTask> {
   const res = await http.post(`/meetings/${meetingId}/asr-tasks`, {
     audio_file_id: audioFileId,
     engine,
+    asr_config_id: asrConfigId ?? null,
   })
   return res.data.data
 }

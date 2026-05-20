@@ -7,12 +7,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install all Python deps in one resolver pass so torch + torchaudio are
-# always the same version (avoids ABI mismatch from mixing whl indexes).
-# On arm64 (Apple Silicon Docker) torch from PyPI is already CPU-only.
+# Install CPU-only PyTorch first to avoid pulling CUDA dependencies (~2GB+).
+# Pin matching versions: aarch64 CPU wheels only go up to torch 2.5.1.
 RUN pip install --no-cache-dir \
-    torch \
-    torchaudio \
+    --index-url https://download.pytorch.org/whl/cpu \
+    torch==2.5.1 torchaudio==2.5.1
+
+# Install remaining Python deps separately so pip doesn't re-resolve torch.
+RUN pip install --no-cache-dir \
     funasr \
     fastapi \
     "uvicorn[standard]" \
@@ -30,6 +32,7 @@ WORKDIR /app
 ENV MODELSCOPE_CACHE=/models
 ENV HF_HOME=/models
 ENV ASR_MODEL=iic/SenseVoiceSmall
+ENV SPK_MODEL=iic/speech_campplus_sv_zh-cn_16k-common
 ENV DEVICE=cpu
 ENV NCPU=4
 

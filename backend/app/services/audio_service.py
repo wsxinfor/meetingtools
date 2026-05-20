@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import shutil
 import uuid
 from pathlib import Path
 
@@ -16,7 +17,7 @@ from app.services.audio.vad import detect_speech_segments
 logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac"}
-MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB
+MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024  # 4 GB
 
 
 def _meeting_audio_dir(meeting_id: uuid.UUID) -> Path:
@@ -27,21 +28,22 @@ async def save_audio_file(
     db: AsyncSession,
     meeting_id: uuid.UUID,
     filename: str,
-    content: bytes,
+    src_path: Path,
 ) -> AudioFile:
     audio_dir = _meeting_audio_dir(meeting_id)
     audio_dir.mkdir(parents=True, exist_ok=True)
 
     suffix = Path(filename).suffix.lower()
     dest = audio_dir / f"{uuid.uuid4().hex}{suffix}"
-    dest.write_bytes(content)
+    shutil.move(str(src_path), str(dest))
+    file_size = dest.stat().st_size
     logger.info("Audio saved: %s", dest)
 
     audio_file = AudioFile(
         meeting_id=meeting_id,
         original_filename=filename,
         file_path=str(dest),
-        file_size=len(content),
+        file_size=file_size,
         status="uploaded",
     )
     db.add(audio_file)
@@ -127,3 +129,17 @@ async def list_audio_files_for_meeting(
         .order_by(AudioFile.created_at)
     )
     return list(result.scalars().all())
+
+
+async def delete_audio_file(db: AsyncSession, audio_file: AudioFile) -> None:
+    for attr in ("file_path", "normalized_path"):
+        path = getattr(audio_file, attr, None)
+        if path:
+            p = Path(path)
+            if p.exists():
+                try:
+                    p.unlink()
+                except OSError:
+                    logger.warning("Failed to delete file: %s", p)
+    await db.delete(audio_file)
+    await db.commit()

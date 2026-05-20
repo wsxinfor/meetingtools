@@ -36,7 +36,7 @@ async def start_asr_task(
         raise HTTPException(status_code=422, detail="音频文件尚未完成预处理，请稍候再试")
 
     task = await asr_task_service.create_asr_task(
-        db, meeting_id, body.audio_file_id, body.engine
+        db, meeting_id, body.audio_file_id, body.engine, body.asr_config_id
     )
     return {"code": 0, "data": AsrTaskOut.model_validate(task).model_dump(), "msg": "ok"}
 

@@ -160,8 +160,14 @@ async function handleGenerate() {
     activeSummaryId.value = summary.id
     ElMessage.success('纪要生成成功')
   } catch (e: unknown) {
-    const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-    ElMessage.error(msg ?? '生成失败，请检查LLM配置')
+    const axiosErr = e as { code?: string; message?: string; response?: { data?: { detail?: string } } }
+    let msg: string
+    if (axiosErr.code === 'ECONNABORTED' || axiosErr.message?.includes('timeout')) {
+      msg = '生成超时，LLM 响应时间较长，请稍后重试'
+    } else {
+      msg = axiosErr.response?.data?.detail ?? '生成失败，请检查LLM配置'
+    }
+    ElMessage.error(msg)
   } finally {
     generating.value = false
   }

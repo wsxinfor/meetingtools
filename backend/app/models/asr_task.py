@@ -22,7 +22,12 @@ class AsrTask(Base):
         ForeignKey("audio_files.id", ondelete="CASCADE"),
         nullable=False,
     )
-    engine: Mapped[str] = mapped_column(String(50), nullable=False, default="mock")
+    asr_config_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("asr_configs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    engine: Mapped[str] = mapped_column(String(50), nullable=False, default="local")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     progress: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     error_message: Mapped[str | None] = mapped_column(Text)

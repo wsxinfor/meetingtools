@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from dataclasses import dataclass
 
@@ -30,9 +31,11 @@ def generate(config: LlmConfig, prompt: str) -> LlmResult:
         model=config.model_name,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
+        extra_body={"enable_thinking": False},
     )
     latency_ms = int((time.monotonic() - start) * 1000)
     content = response.choices[0].message.content or ""
+    content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
     logger.info("LLM generation done model=%s latency_ms=%d", config.model_name, latency_ms)
     return LlmResult(content=content, model=config.model_name, latency_ms=latency_ms)
 
@@ -45,6 +48,7 @@ def test_connection(config: LlmConfig) -> LlmResult:
         messages=[{"role": "user", "content": "你好，请回复一句话。"}],
         max_tokens=50,
         temperature=0.0,
+        extra_body={"enable_thinking": False},
     )
     latency_ms = int((time.monotonic() - start) * 1000)
     content = response.choices[0].message.content or ""

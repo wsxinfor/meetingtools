@@ -92,6 +92,7 @@ const configNavItems = computed(() => {
     { path: '/terms', label: '术语库' },
     { path: '/templates', label: '纪要模板' },
     { path: '/llm-configs', label: 'LLM 配置' },
+    { path: '/asr-configs', label: 'ASR 配置' },
   ]
   if (authStore.isAdmin) {
     items.push({ path: '/users', label: '用户管理' })
@@ -108,6 +109,7 @@ const currentTitle = computed(() => {
     '/terms': '术语库',
     '/templates': '纪要模板',
     '/llm-configs': 'LLM 配置',
+    '/asr-configs': 'ASR 配置',
     '/users': '用户管理',
   }
   const base = '/' + (route.path.split('/')[1] || '')

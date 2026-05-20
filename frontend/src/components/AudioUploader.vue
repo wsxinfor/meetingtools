@@ -31,9 +31,10 @@
           <el-tag size="small" :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="80" align="center">
+      <el-table-column label="操作" width="120" align="center">
         <template #default="{ row }">
           <el-button size="small" link type="primary" @click="handleDownload(row)">下载</el-button>
+          <el-button size="small" link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -42,8 +43,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { uploadAudio, listAudioFiles, downloadAudioFile, type AudioFile } from '@/api/audio'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { uploadAudio, listAudioFiles, downloadAudioFile, deleteAudioFile, type AudioFile } from '@/api/audio'
 
 const props = defineProps<{ meetingId: string }>()
 
@@ -105,6 +106,25 @@ async function handleDownload(file: AudioFile) {
     URL.revokeObjectURL(url)
   } catch {
     ElMessage.error('下载失败')
+  }
+}
+
+async function handleDelete(file: AudioFile) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${file.original_filename}」？`, '删除确认', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
+  try {
+    await deleteAudioFile(file.id)
+    files.value = files.value.filter((f) => f.id !== file.id)
+    ElMessage.success('已删除')
+  } catch {
+    ElMessage.error('删除失败')
   }
 }
 

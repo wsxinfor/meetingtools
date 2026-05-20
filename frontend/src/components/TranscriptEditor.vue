@@ -11,6 +11,15 @@
           :value="f.id"
         />
       </el-select>
+      <el-select v-model="selectedEngine" style="width: 160px" placeholder="识别引擎">
+        <el-option label="本地 FunASR" value="local" />
+        <el-option
+          v-for="c in asrConfigs"
+          :key="c.id"
+          :label="c.name"
+          :value="c.id"
+        />
+      </el-select>
       <el-button
         type="primary"
         :loading="asrRunning"
@@ -95,6 +104,7 @@ import { ElMessage } from 'element-plus'
 import { listAudioFiles, type AudioFile } from '@/api/audio'
 import { listSegments, updateSegment, saveCorrectedText, type TranscriptSegment } from '@/api/segments'
 import { startAsrTask, getAsrTask, type AsrTask } from '@/api/asr'
+import { listAsrConfigs, type AsrConfig } from '@/api/asr_configs'
 import { applyTerms } from '@/api/terms'
 
 const props = defineProps<{
@@ -114,6 +124,8 @@ const audioFiles = ref<AudioFile[]>([])
 const segments = ref<EditableSeg[]>([])
 const correctedText = ref(props.initialCorrectedText ?? '')
 const selectedAudioId = ref<string>('')
+const selectedEngine = ref<string>('local')
+const asrConfigs = ref<AsrConfig[]>([])
 const editingId = ref<string | null>(null)
 const dirtyIds = ref(new Set<string>())
 const savingAll = ref(false)
@@ -135,12 +147,14 @@ function resolvedSpeaker(seg: EditableSeg): string {
 async function load() {
   loading.value = true
   try {
-    const [files, segs] = await Promise.all([
+    const [files, segs, cfgs] = await Promise.all([
       listAudioFiles(props.meetingId),
       listSegments(props.meetingId),
+      listAsrConfigs().catch(() => [] as AsrConfig[]),
     ])
     audioFiles.value = files
     segments.value = segs.map(toEditable)
+    asrConfigs.value = cfgs.filter(c => c.is_enabled && c.provider === 'remote')
     emit('segments-loaded', segs)
     if (files.length && !selectedAudioId.value) selectedAudioId.value = files[0].id
   } finally {
@@ -224,7 +238,13 @@ async function startAsr() {
   if (!selectedAudioId.value) return
   asrRunning.value = true
   try {
-    asrTask.value = await startAsrTask(props.meetingId, selectedAudioId.value)
+    const isRemote = selectedEngine.value !== 'local'
+    asrTask.value = await startAsrTask(
+      props.meetingId,
+      selectedAudioId.value,
+      isRemote ? 'remote' : 'local',
+      isRemote ? selectedEngine.value : undefined,
+    )
     pollAsrStatus()
   } catch {
     ElMessage.error('启动识别失败')

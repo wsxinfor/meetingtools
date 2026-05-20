@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session_factory
+from app.models.asr_config import AsrConfig
 from app.models.asr_task import AsrTask
 from app.models.audio import AudioFile
 from app.models.meeting import Meeting
@@ -19,16 +20,32 @@ from app.services.asr.factory import get_asr_provider
 logger = logging.getLogger(__name__)
 
 
+async def recover_stuck_tasks() -> None:
+    """Re-queue ASR tasks that were left in 'pending' or 'running' after a restart."""
+    async with async_session_factory() as db:
+        result = await db.execute(
+            select(AsrTask).where(AsrTask.status.in_(["pending", "running"]))
+        )
+        stuck = list(result.scalars().all())
+    if not stuck:
+        return
+    logger.info("Recovering %d stuck ASR task(s)", len(stuck))
+    for task in stuck:
+        asyncio.create_task(_run_asr_bg(task.id))
+
+
 async def create_asr_task(
     db: AsyncSession,
     meeting_id: uuid.UUID,
     audio_file_id: uuid.UUID,
     engine: str,
+    asr_config_id: uuid.UUID | None = None,
 ) -> AsrTask:
     task = AsrTask(
         meeting_id=meeting_id,
         audio_file_id=audio_file_id,
         engine=engine,
+        asr_config_id=asr_config_id,
         status="pending",
     )
     db.add(task)
@@ -77,7 +94,21 @@ async def _execute_asr(task_id: uuid.UUID) -> None:
         )
         await db.commit()
 
-    provider = get_asr_provider()
+        # Resolve AsrConfig for remote engine
+        asr_config: AsrConfig | None = None
+        if task.engine == "remote":
+            asr_config = await db.get(AsrConfig, task.asr_config_id) if task.asr_config_id else None
+            if not asr_config:
+                asr_config = (
+                    await db.execute(
+                        select(AsrConfig).where(
+                            AsrConfig.is_default.is_(True),
+                            AsrConfig.is_enabled.is_(True),
+                        )
+                    )
+                ).scalar_one_or_none()
+
+    provider = get_asr_provider(engine=task.engine, asr_config=asr_config)
     await _transcribe_whole_file(task_id, audio_file, provider)
 
 

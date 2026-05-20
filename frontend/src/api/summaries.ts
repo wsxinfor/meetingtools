@@ -27,7 +27,7 @@ export interface SummaryUpdate {
 }
 
 export async function generateSummary(meetingId: string, data: SummaryCreate): Promise<Summary> {
-  const res = await http.post(`/meetings/${meetingId}/summaries`, data)
+  const res = await http.post(`/meetings/${meetingId}/summaries`, data, { timeout: 0 })
   return res.data.data
 }
 
